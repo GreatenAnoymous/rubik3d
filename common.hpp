@@ -32,6 +32,8 @@ typedef std::chrono::duration<float> fsec;
 
 const int cell_size=3;
 
+//the precomputed data for 2d routing
+static nlohmann::json data2d;
 
 class Location3d{
 public:
@@ -67,7 +69,10 @@ using Configs=std::vector<Location3d*>;
 
 class Robot{
 public:
-    Robot(int _id,Location3d* _current,Location3d *_goal):id(_id),current(_current),goal(_goal){start=current;}
+    Robot(int _id,Location3d* _current,Location3d *_goal):id(_id),current(_current),goal(_goal){
+        start=current;
+        umapf_goal=goal;
+    }
     int id;
     Location3d *start;            //true start
     Location3d *current;        //current state
@@ -78,14 +83,14 @@ public:
     Location3d *umapf_goal;    //umapf goal
     Path3d umapf_goal_path;     //umpaf_goal path
     Path3d path;                //true path
-    Path3d inter_path;          //
+    Path3d inter_path;          //umpaf inter_goal
+    
     
 };
 
 using Robots=std::vector<Robot*>;
 
-
-void read_instances(std::string file_name,Robots &robots,Grids3d *graph);
+void read_instances(std::string file_name,Robots &robots,Grids3d *&graph);
 void save_solutions(std::string file_name,Robots&robots,double runtime,bool save_paths);
 void check_feasible(Paths3d &paths);
 void evaluate_result(Robots &robots,int &makespan,int &makespanLB,int &soc,int &socLB);   

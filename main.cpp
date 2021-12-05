@@ -19,7 +19,11 @@
 
 
 void test_read_instance(){
-
+    Robots test_robots;
+    Grids3d *test_graph;
+    read_instances("./test.scen",test_robots,test_graph);
+    // std::cout<<"what is wrong "<<test_robots.size()<<" ";
+    std::cout<<test_graph->getNodesSize()<<" "<<test_graph->xmax<<std::endl;
 }
 
 
@@ -34,11 +38,12 @@ void test_rth2d(){
 
 
 void test_rth3d(){
-    
+
 }
 
 
 int main(int argc, char* argv[]){
+    test_read_instance();
     return 0;
 
 }

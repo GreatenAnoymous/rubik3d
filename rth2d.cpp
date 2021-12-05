@@ -10,12 +10,10 @@
  */
 #include"rth2d.hpp"
 
-
-
 ///////////////////////////////RTH2D fat column //////////////////
 
 RTH_2d::RTH_2d(Robots &_r,Grids3d *_graph):robots(_r),graph(_graph){
-
+    assert(robots.size()<=graph->xmax*graph->ymax/3);
 }
 
 Location3d* RTH_2d::getV(int x,int y,int z){
@@ -33,6 +31,7 @@ void RTH_2d::solve(){
 }
 
 //move the robots to the middle line if needed
+//so here we may assume it is already centered
 void RTH_2d::prepare(){
 
 }
@@ -115,6 +114,42 @@ void RTH_2d::matching_helper(std::unordered_map<int,Robots> &column_dict,
     for(auto c:column_id){
         matching.insert({c,assignment[c]});
     }        
+}
+
+
+void RTH_2d::LBA_heuristic(){
+    std::unordered_map<int,Robots> row_dict;
+   
+    for(auto &agent:robots){
+        row_dict[agent->intermediate->x].push_back(agent);
+    }
+
+    std::vector<std::vector<double>>cost_matrix;
+    std::vector<int> rows;
+    for(const auto &pair:row_dict){
+        rows.push_back(pair.first);
+    }
+   
+    for(const auto &row:rows){
+        // Agents as=row_dict[row];
+        std::vector<double> cost_i;
+        cost_matrix.push_back(cost_i);
+        for(const auto & row2:rows){
+            double cost=0;
+            for(auto&agent :row_dict[row]){
+                cost=std::max(cost,fabs(agent->current->x-row2));  
+            }
+            cost_matrix.back().push_back(cost);
+        }
+        // cost_matrix.back.push_back(cost_i);
+    }
+    std::vector<int> assignment;
+    labp_solve(cost_matrix,assignment);
+    for(int i=0;i<rows.size();i++){
+        for(auto&agent: row_dict[rows[i]]){
+            agent->intermediate->x=rows[assignment[i]];
+        }
+    }
 }
 
 

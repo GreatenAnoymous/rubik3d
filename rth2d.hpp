@@ -21,14 +21,14 @@
  * using 2d 3m shuffles for the fat columns
  */
 class RTH_2d{
-    const int cell_size=3;
+  
     using point2d=std::pair<int,int>;
 public:
     RTH_2d(Robots &,Grids3d *graph);
     void solve();
 
 private:
-    std::unordered_map<int,Location3d*> inter_goal2d;   //the desired (x,y)
+    // std::unordered_map<int,Location3d*> inter_goal2d;   //the desired (x,y)
     Location3d * getV(int,int,int);
     void matching();
     void x_shuffle();
@@ -42,6 +42,7 @@ private:
         std::unordered_map<point2d,Robot*,boost::hash<point2d>> &arranged_robots,
         int row
     );
+    void LBA_heuristic();
     Robots robots;// all the robots currently have the same z 
     Grids3d *graph;
 };

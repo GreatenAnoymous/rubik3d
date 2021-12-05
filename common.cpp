@@ -22,13 +22,14 @@
  */
 Grids3d::Grids3d(int _xmax,int _ymax,int _zmax):xmax(_xmax),ymax(_ymax),zmax(_zmax){
     auto getId=[&](int x,int y,int z){
-        return x+xmax*y+xmax*zmax*z;
+        return x+xmax*y+xmax*ymax*z;
     };
+    nodes=std::vector<Location3d*>(xmax*ymax*zmax,nullptr);
     for(int x=0;x<xmax;x++){
         for(int y=0;y<ymax;y++){
             for(int z=0;z<zmax;z++){
                 Location3d* node=new Location3d(getId(x,y,z),x,y,z);
-                nodes.push_back(node);
+                nodes[getId(x,y,z)]=node;
             }
         }
     }
@@ -79,7 +80,6 @@ std::vector<Location3d*> Grids3d::getNeighbors(Location3d * node){
 }
 
 
-
 ///////////////////////////////////////////////////////////////////// util functions //////////////////////////////////////////////////
 
 /**
@@ -91,15 +91,15 @@ std::vector<Location3d*> Grids3d::getNeighbors(Location3d * node){
  * @param ymax 
  * @param zmax 
  */
-void read_instances(std::string file_name,Robots &robots,Grids3d *graph){
-    robots.clear();
+void read_instances(std::string file_name,Robots &robots,Grids3d *&graph){
+  
     int xmax=-1,ymax=-1,zmax=-1;
     std::string line;
     std::smatch results;
     std::ifstream scen_file(file_name);
-    std::regex r_xmax=std::regex(R"(xmax\s(\d+))");
-    std::regex r_ymax=std::regex(R"(ymax\s(\d+))");
-    std::regex r_zmax=std::regex(R"(zmax\s(\d+))");
+    std::regex r_xmax=std::regex(R"(xmax=(\d+))");
+    std::regex r_ymax=std::regex(R"(ymax=(\d+))");
+    std::regex r_zmax=std::regex(R"(zmax=(\d+))");
     std::regex r_sg=std::regex(R"((\d+),(\d+),(\d+),(\d+),(\d+),(\d+))");
 
 
@@ -107,6 +107,7 @@ void read_instances(std::string file_name,Robots &robots,Grids3d *graph){
         std::cout<<"File not found!"<<std::endl;
         exit(0);
     }
+    int id=0;
     while(getline(scen_file,line)){
         //CRLF
         if(*(line.end()-1)==0x0d) line.pop_back();
@@ -122,30 +123,32 @@ void read_instances(std::string file_name,Robots &robots,Grids3d *graph){
 
         if(std::regex_match(line,results,r_zmax)){
             zmax=std::stoi(results[1].str());
+            graph=new Grids3d(xmax,ymax,zmax);
             continue;
         }
-        if(xmax>0 and ymax >0 and zmax>0){
-            graph=new Grids3d(xmax,ymax,zmax);
-        }
-        int id=0;
+        // if(xmax>0 and ymax >0 and zmax>0){
+            
+        // }
+        
         if(std::regex_match(line,results,r_sg)){
+            
             int x_s=std::stoi(results[1].str());
             int y_s=std::stoi(results[2].str());
             int z_s=std::stoi(results[2].str());
-            int x_g=std::stoi(results[2].str());
-            int y_g=std::stoi(results[3].str());
-            int z_g=std::stoi(results[4].str());
+            int x_g=std::stoi(results[3].str());
+            int y_g=std::stoi(results[4].str());
+            int z_g=std::stoi(results[5].str());
             Robot *ri=new Robot(id,graph->getVertex(x_s,y_s,z_s),graph->getVertex(x_g,y_g,z_g));
+            id++;
+      
             robots.push_back(ri);
+            
             // starts.push_back(Location(x_s,y_s));
             // goals.push_back(Location(x_g,y_g));
             continue;
         }
         
-    }
-
-
-    
+    } 
 }
 
 void evaluate_result(Robots &robots,int &makespan,int &makespanLB,int &soc,int &socLB){
@@ -158,8 +161,6 @@ void evaluate_result(Robots &robots,int &makespan,int &makespanLB,int &soc,int &
         
     }
 }
-
-
 
 /**
  * @brief 

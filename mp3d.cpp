@@ -8,10 +8,7 @@
  * @copyright Copyright (c) 2021
  * 
  */
-
 #include"mp3d.hpp"
-
-
 
 
 ///////////////////////////////motion3d/////////////////////////////////////////////////
@@ -46,7 +43,7 @@ void Motion3d::reconfigure(){
  * mvoe all the robots to the middle line
  */
 void Motion3d::prepare(){
-    const int cell_size=3;
+    // const int cell_size=3;
     switch(orientation){
         case 'x':
             for(int i=xmin;i<xmax+1;i+=cell_size) prepare_helper(i,ymin,zmin);break;
@@ -60,9 +57,8 @@ void Motion3d::prepare(){
 
 /**
  * @brief 
- * shuffle x from 1 to m
+ * shuffle x from 1 to m, using xy
  */
-
 void Motion3d::reconfigure_x(){
     if(robots.size()==0) return;
     prepare();
@@ -88,6 +84,10 @@ void Motion3d::reconfigure_x(){
     fill_paths(robots);
 }
 
+/**
+ * @brief  using xy
+ * 
+ */
 void Motion3d::reconfigure_y(){
     if(robots.empty()) return;
     prepare();
@@ -111,6 +111,10 @@ void Motion3d::reconfigure_y(){
     fill_paths(robots);
 }
 
+/**
+ * @brief using xz
+ * 
+ */
 void Motion3d::reconfigure_z(){
     if(robots.empty()) return;
     prepare();
@@ -135,10 +139,126 @@ void Motion3d::reconfigure_z(){
 }
 
 
-void Motion3d::prepare_helper(int,int,int){
 
-}
 
 void Motion3d::insert_end_path(){
+
+}
+/**
+ * @brief 
+ * 
+ * @param min_x 
+ * @param min_y 
+ * @param min_z 
+ */
+
+void Motion3d::prepare_helper(int min_x,int min_y,int min_z){
+    std::function<int(int,int,int)> get_json_id;
+    std::function<std::string(Robots &,char)>get_json_key;
+    std::function<Location3d *(int vid)> get_back_vertex;
+    Robots robots1,robots2;
+    std::vector<Location3d*>vertices;
+
+    auto get_index = [](std::vector<Location3d*> &vertices, Location3d *v) {
+        auto it = find(vertices.begin(), vertices.end(), v);
+        int id = distance(vertices.begin(), it);
+        return id;
+    };
+
+    get_json_key=[&vertices,&get_index](Robots &r,char sg)->std::string{
+        std::string start_id="((";
+        std::function<bool(Robot*,Robot*)> id_order;
+        if(sg=='s') id_order=[&vertices,&get_index](Robot *r1,Robot *r2){
+            int id1=get_index(vertices,r1->current);
+            int id2=get_index(vertices,r2->current);
+            return id1<id2;
+        };
+        else if(sg=='g')id_order=[&vertices,&get_index](Robot *r1,Robot *r2){
+            int id1=get_index(vertices,r1->intermediate);
+            int id2=get_index(vertices,r2->intermediate);
+            return id1<id2;
+        };
+        std::sort(r.begin(),r.end(),id_order);
+        for(auto &ri:r){
+            int id;
+            if(sg=='s')id=get_index(vertices,ri->current);
+            else id=get_index(vertices,ri->intermediate);
+            start_id+=std::to_string(id);
+            start_id+=",  ";
+        }
+        start_id.pop_back();
+        start_id.pop_back();
+        start_id+="), ";
+        start_id += "'x')";
+        return start_id;
+    };
+    
+    
+    auto find_robots=[&](std::vector<Location3d*>&vertices,Robots &r1,Robots &r2){
+        for (auto &agent : robots){
+            if (std::find(vertices.begin(), vertices.end(), agent->current) != vertices.end()){
+                r1.push_back(agent);
+            }
+            if (std::find(vertices.begin(), vertices.end(), agent->intermediate) != vertices.end()){
+                r2.push_back(agent);
+            }
+        }
+    };
+
+    if(orientation=='x'){
+        for(int y=ymin;y<ymin+cell_size;y++)
+            for(int x=xmin;x<xmin+cell_size;x++)
+                vertices.push_back(getVertex(x,y,zmin));
+        assert(vertices.size()==3);
+        find_robots(vertices,robots1,robots2);
+       
+    }
+
+    else if(orientation=='y'){
+        for(int x=xmin;x<xmin+cell_size;x++)
+            for(int y=ymin;y<ymin+cell_size;y++)
+                vertices.push_back(getVertex(x,y,zmin));
+        assert(vertices.size()==3);
+        find_robots(vertices,robots1,robots2);
+    }
+
+    else if(orientation=='z'){
+        for(int x=xmin;x<xmin+cell_size;x++)
+            for(int z=zmin;z<zmin+cell_size;z++)
+                vertices.push_back(getVertex(x,ymin,z));
+        assert(vertices.size()==3);
+        find_robots(vertices,robots1,robots2);
+    }
+
+    if(robots1.size()!=0){
+        auto start_id=get_json_key(robots1,'s');
+        std::vector<std::vector<int>> solution = data2d[start_id];
+        for(int i=0;i<robots1.size();i++){
+            Path3d new_path;
+            for (auto vid : solution[i]){
+                new_path.push_back(vertices[vid]);
+            }
+            // assert(new_path[0]==robots2[i]->intermediate);
+             robots1[i]->path.insert(robots1[i]->path.end(), new_path.begin(), new_path.end());
+            robots1[i]->current = new_path.back();
+        }
+    }
+    if(robots2.size()!=0){
+        auto start_id=get_json_key(robots2,'g');
+        std::vector<std::vector<int>> solution = data2d[start_id];
+        for(int i=0;i<robots2.size();i++){
+            Path3d new_path;
+            for (auto vid : solution[i]){
+                new_path.push_back(vertices[vid]);
+            }
+            // assert(new_path[0]==robots2[i]->intermediate);
+            robots2[i]->inter2 = new_path.back();
+            new_path.pop_back();
+            std::reverse(new_path.begin(), new_path.end());
+            robots2[i]->inter_path = new_path;
+        }
+    }
+
+
     
 }
