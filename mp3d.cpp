@@ -12,7 +12,7 @@
 
 
 ///////////////////////////////motion3d/////////////////////////////////////////////////
-Motion3d::Motion3d(Robots &robots,point2d xrange,point2d yrange,point2d zrange,char orientation){
+Motion3d::Motion3d(Robots &robots,point2d xrange,point2d yrange,point2d zrange,char orientation,Grids3d *_graph){
     this->robots=robots;
     this->xmin=xrange.first;
     this->xmax=xrange.second;
@@ -21,6 +21,10 @@ Motion3d::Motion3d(Robots &robots,point2d xrange,point2d yrange,point2d zrange,c
     this->zmin=zrange.first;
     this->zmax=zrange.second;
     this->orientation=orientation;
+    this->graph=_graph;
+    getVertex=[&](int x,int y,int z){
+        return graph->getVertex(x,y,z);
+    };
 }
 
 
@@ -62,6 +66,7 @@ void Motion3d::prepare(){
 void Motion3d::reconfigure_x(){
     if(robots.size()==0) return;
     prepare();
+    // std::cout<<"the size="<<graph->getNodesSize()<<std::endl;
     fill_paths(robots);
     for(auto &r:robots){
         int xs,ys,zs,xg,yg,zg;
@@ -153,6 +158,7 @@ void Motion3d::insert_end_path(){
  */
 
 void Motion3d::prepare_helper(int min_x,int min_y,int min_z){
+    // std::cout<<"min_x="<<min_x<<std::endl;
     std::function<int(int,int,int)> get_json_id;
     std::function<std::string(Robots &,char)>get_json_key;
     std::function<Location3d *(int vid)> get_back_vertex;
@@ -184,7 +190,7 @@ void Motion3d::prepare_helper(int min_x,int min_y,int min_z){
             if(sg=='s')id=get_index(vertices,ri->current);
             else id=get_index(vertices,ri->intermediate);
             start_id+=std::to_string(id);
-            start_id+=",  ";
+            start_id+=", ";
         }
         start_id.pop_back();
         start_id.pop_back();
@@ -206,32 +212,41 @@ void Motion3d::prepare_helper(int min_x,int min_y,int min_z){
     };
 
     if(orientation=='x'){
-        for(int y=ymin;y<ymin+cell_size;y++)
-            for(int x=xmin;x<xmin+cell_size;x++)
-                vertices.push_back(getVertex(x,y,zmin));
-        assert(vertices.size()==3);
+        for(int y=min_y;y<min_y+cell_size;y++)
+            for(int x=min_x;x<min_x+cell_size;x++)
+                vertices.push_back(getVertex(x,y,min_z));
+        // std::cout<<"vertices have "<<std::endl;
+        // for(auto &v:vertices){
+        //     std::cout<<v->x<<" "<<v->y<<std::endl;
+        // }
         find_robots(vertices,robots1,robots2);
        
     }
 
     else if(orientation=='y'){
-        for(int x=xmin;x<xmin+cell_size;x++)
-            for(int y=ymin;y<ymin+cell_size;y++)
-                vertices.push_back(getVertex(x,y,zmin));
-        assert(vertices.size()==3);
+        for(int x=min_x;x<min_x+cell_size;x++)
+            for(int y=min_y;y<min_y+cell_size;y++)
+                vertices.push_back(getVertex(x,y,min_z));
+
         find_robots(vertices,robots1,robots2);
+        // for(auto &r:robots2){
+        //     std::cout<<"debug "<<r->id<<" "<<r->intermediate->x<<","<<r->intermediate->y<<std::endl;
+        // }
+        //  assert(robots2.size()<=3);
     }
 
     else if(orientation=='z'){
-        for(int x=xmin;x<xmin+cell_size;x++)
-            for(int z=zmin;z<zmin+cell_size;z++)
-                vertices.push_back(getVertex(x,ymin,z));
-        assert(vertices.size()==3);
+        for(int x=min_x;x<min_x+cell_size;x++)
+            for(int z=min_z;z<min_z+cell_size;z++)
+                vertices.push_back(getVertex(x,min_y,z));
+
         find_robots(vertices,robots1,robots2);
     }
 
     if(robots1.size()!=0){
         auto start_id=get_json_key(robots1,'s');
+        // std::cout<<start_id<<std::endl;
+        // std::cout<<data2d.size()<<std::endl;
         std::vector<std::vector<int>> solution = data2d[start_id];
         for(int i=0;i<robots1.size();i++){
             Path3d new_path;
@@ -244,7 +259,12 @@ void Motion3d::prepare_helper(int min_x,int min_y,int min_z){
         }
     }
     if(robots2.size()!=0){
+        // for(auto &r:robots2){
+        //     std::cout<<r->intermediate->x<<" "<<r->intermediate->y<<std::endl;
+        // }
+       
         auto start_id=get_json_key(robots2,'g');
+        // std::cout<<start_id<<std::endl;
         std::vector<std::vector<int>> solution = data2d[start_id];
         for(int i=0;i<robots2.size();i++){
             Path3d new_path;
@@ -253,6 +273,7 @@ void Motion3d::prepare_helper(int min_x,int min_y,int min_z){
             }
             // assert(new_path[0]==robots2[i]->intermediate);
             robots2[i]->inter2 = new_path.back();
+          
             new_path.pop_back();
             std::reverse(new_path.begin(), new_path.end());
             robots2[i]->inter_path = new_path;

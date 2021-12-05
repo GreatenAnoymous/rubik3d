@@ -16,7 +16,7 @@ class Motion3d{
 public:
     using point2d=std::pair<int,int>;
     Motion3d(){}
-    Motion3d(Robots &robots,point2d xrange,point2d yrange,point2d zrange,char orientation='x');
+    Motion3d(Robots &robots,point2d xrange,point2d yrange,point2d zrange,char orientation='x',Grids3d *graph=nullptr);
     void reconfigure();
     std::function<Location3d*(int ,int,int)> getVertex;
 protected:
@@ -28,6 +28,6 @@ protected:
     void reconfigure_y();
     void reconfigure_z();
     void insert_end_path();
-
+    Grids3d* graph;
     char orientation;
 };

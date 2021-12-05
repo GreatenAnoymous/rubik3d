@@ -59,7 +59,8 @@ Location3d* Grids3d::getVertex(int id){
  * @return Location3d* 
  */
 Location3d* Grids3d::getVertex(int x,int y, int z){
-    return nodes[x+xmax*y+xmax*zmax*z];
+    // std::cout<<"grid debug "<<nodes.size()<< " "<<x+xmax*y+xmax*ymax*z<<std::endl;
+    return nodes[x+xmax*y+xmax*ymax*z];
 }
 
 /**
@@ -134,10 +135,10 @@ void read_instances(std::string file_name,Robots &robots,Grids3d *&graph){
             
             int x_s=std::stoi(results[1].str());
             int y_s=std::stoi(results[2].str());
-            int z_s=std::stoi(results[2].str());
-            int x_g=std::stoi(results[3].str());
-            int y_g=std::stoi(results[4].str());
-            int z_g=std::stoi(results[5].str());
+            int z_s=std::stoi(results[3].str());
+            int x_g=std::stoi(results[4].str());
+            int y_g=std::stoi(results[5].str());
+            int z_g=std::stoi(results[6].str());
             Robot *ri=new Robot(id,graph->getVertex(x_s,y_s,z_s),graph->getVertex(x_g,y_g,z_g));
             id++;
       
@@ -204,7 +205,9 @@ void fill_paths(Robots &robots,int makespan){
     }
     for(auto &r:robots){
         while(r->path.size()<makespan) r->path.push_back(r->path.back());
+        r->current=r->path.back();
     }
+    
 }
 
 /**

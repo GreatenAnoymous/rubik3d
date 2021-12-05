@@ -32,8 +32,7 @@ typedef std::chrono::duration<float> fsec;
 
 const int cell_size=3;
 
-//the precomputed data for 2d routing
-static nlohmann::json data2d;
+extern nlohmann::json data2d;
 
 class Location3d{
 public:
@@ -71,7 +70,9 @@ class Robot{
 public:
     Robot(int _id,Location3d* _current,Location3d *_goal):id(_id),current(_current),goal(_goal){
         start=current;
+        inter_goal=goal;
         umapf_goal=goal;
+        path.push_back(current);
     }
     int id;
     Location3d *start;            //true start

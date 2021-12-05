@@ -10,6 +10,12 @@
  */
 #include"rth2d.hpp"
 
+
+/////debug function////////////////////////////////////////////////
+
+
+
+
 ///////////////////////////////RTH2D fat column //////////////////
 
 RTH_2d::RTH_2d(Robots &_r,Grids3d *_graph):robots(_r),graph(_graph){
@@ -24,10 +30,12 @@ void RTH_2d::solve(){
     prepare();
     matching();
     x_shuffle();
+
     y_fitting();
     y_shuffle();
     x_fitting();
     x_shuffle();
+    std::cout<<"solved!"<<std::endl;
 }
 
 //move the robots to the middle line if needed
@@ -41,22 +49,25 @@ void RTH_2d::matching(){
     std::unordered_map<int,Robots> column_dict;
     int zs;
     for(auto &r:robots){
+
         int ci=r->current->y;
         column_dict[ci].push_back(r);
         zs=r->current->z;
     }
 
-    for(int i=0;i<graph->xmax;i++){
+
+    for(int i=0;i<graph->xmax/3;i++){
+        // std::cout<<"the "<<i<<"-th matching"<<std::endl;
         std::unordered_map<int,int>matching;
         std::unordered_map<point2d,Robot*,boost::hash<point2d>> arranged_robots;
-        matching_helper(column_dict,matching,arranged_robots,i);
-        for(int color=0;color<graph->ymax/3;color++){
+        matching_helper(column_dict,matching,arranged_robots,3*i+1);
+        for(int color=0;color<graph->ymax;color++){
             int column=matching[color];
             arranged_robots[{color,column}]->intermediate=
-                getV(i,color,zs);
+                getV(3*i+1,color,zs);
         }
     }
-    //matching_heuristic()
+    // LBA_heuristic();
 }
 
 /**
@@ -84,7 +95,7 @@ void RTH_2d::matching_helper(std::unordered_map<int,Robots> &column_dict,
             int min_d=max_inf;
             Robot* min_agent;
             for(auto const &agent_i :column_dict[i]){
-                if(agent_i->inter_goal->y==j &&abs(agent_i->current->x-row)<min_d){
+                if(agent_i->inter_goal->y==j and abs(agent_i->current->x-row)<min_d){
                     found=true;
                     min_d=abs(agent_i->current->x-row);
                     min_agent=agent_i;
@@ -99,6 +110,10 @@ void RTH_2d::matching_helper(std::unordered_map<int,Robots> &column_dict,
             }
         }
     }
+    // for(auto &e:costEdge){
+    //     std::cout<<std::get<0>(e)<<" "<<std::get<1>(e)<<" "<<std::get<2>(e)<<std::endl;
+    // }
+    // std::cout<<costEdge.size()<<std::endl;
     std::vector<int> assignment;
     double cost=lba_sparse(costEdge,assignment);
     for(auto c:column_id){
@@ -168,7 +183,7 @@ void RTH_2d::y_shuffle(){
             }
                 
         }
-        Motion3d swapper(robots1,{0,graph->xmax-1},{i,i+cell_size-1},{zs,zs},'y');
+        Motion3d swapper(robots1,{i,i+cell_size-1},{0,graph->ymax-1},{zs,zs},'y',graph);
         swapper.reconfigure();
     }
 }
@@ -184,7 +199,7 @@ void RTH_2d::x_shuffle(){
             }
                 
         }
-        Motion3d swapper(robots1,{0,graph->xmax-1},{i,i+cell_size-1},{zs,zs},'x');
+        Motion3d swapper(robots1,{0,graph->xmax-1},{i,i+cell_size-1},{zs,zs},'x',graph);
         swapper.reconfigure();
     }
    

@@ -15,8 +15,9 @@
 #include "rth2d.hpp"
 #include "rubik3d.hpp"
 #include "umapf3d.hpp"
+#include "json.hpp"
 
-
+nlohmann::json data2d; 
 
 void test_read_instance(){
     Robots test_robots;
@@ -28,12 +29,21 @@ void test_read_instance(){
 
 
 void test_umapf_3d(){
-
+   
 }
 
 
 void test_rth2d(){
-
+    std::ifstream ifs("./data2d.json");
+    data2d=nlohmann::json::parse(ifs);
+    // std::cout<<data2d.size()<<std::endl;
+    Robots test_robots;
+    Grids3d*test_graph;
+    
+    read_instances("./python/debug2d.scen",test_robots,test_graph);
+    std::cout<<"debug size "<<test_graph->getNodesSize()<<std::endl;
+    RTH_2d tester(test_robots,test_graph);
+    tester.solve();
 }
 
 
@@ -43,7 +53,8 @@ void test_rth3d(){
 
 
 int main(int argc, char* argv[]){
-    test_read_instance();
+    // test_read_instance();
+    test_rth2d();
     return 0;
 
 }
