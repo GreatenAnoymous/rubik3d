@@ -215,10 +215,7 @@ void Motion3d::prepare_helper(int min_x,int min_y,int min_z){
         for(int y=min_y;y<min_y+cell_size;y++)
             for(int x=min_x;x<min_x+cell_size;x++)
                 vertices.push_back(getVertex(x,y,min_z));
-        // std::cout<<"vertices have "<<std::endl;
-        // for(auto &v:vertices){
-        //     std::cout<<v->x<<" "<<v->y<<std::endl;
-        // }
+  
         find_robots(vertices,robots1,robots2);
        
     }
@@ -229,10 +226,7 @@ void Motion3d::prepare_helper(int min_x,int min_y,int min_z){
                 vertices.push_back(getVertex(x,y,min_z));
 
         find_robots(vertices,robots1,robots2);
-        // for(auto &r:robots2){
-        //     std::cout<<"debug "<<r->id<<" "<<r->intermediate->x<<","<<r->intermediate->y<<std::endl;
-        // }
-        //  assert(robots2.size()<=3);
+
     }
 
     else if(orientation=='z'){
@@ -259,10 +253,7 @@ void Motion3d::prepare_helper(int min_x,int min_y,int min_z){
         }
     }
     if(robots2.size()!=0){
-        // for(auto &r:robots2){
-        //     std::cout<<r->intermediate->x<<" "<<r->intermediate->y<<std::endl;
-        // }
-       
+     
         auto start_id=get_json_key(robots2,'g');
         // std::cout<<start_id<<std::endl;
         std::vector<std::vector<int>> solution = data2d[start_id];

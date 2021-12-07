@@ -21,6 +21,7 @@
 
 class RTH_3d{
 using point3d=std::tuple<int,int,int>;
+using point2d=std::pair<int,int>;
 using robotPlaceMap=std::unordered_map<point3d,Robots,boost::hash<point3d>>;
 public:
     RTH_3d(){}
@@ -36,10 +37,34 @@ protected:
     void xy_fitting();
     void z_fitting(); 
     void lba_matching_fat();
-    // void lba_matching_2d();
+    void matching_helper(std::unordered_map<int,Robots> &column_dict,
+        std::unordered_map<int,int> &matching,
+        std::unordered_map<point2d,Robot*,boost::hash<point2d>> &arranged_agents,
+        int row);
+
     void prepare();
     std::function<Location3d*(int,int,int)> getVertex;
     void prepare_helper(int i,int j,int k,robotPlaceMap & ,robotPlaceMap &);
+    bool use_umapf=false;
+
+    int get_plane_id(int x,int y){
+        if(graph->xmax>=graph->ymax) return x+graph->xmax*y;
+        else return y+graph->ymax*x;
+    }
+    void get_xy(int id,int &x,int &y){
+        if(graph->xmax>=graph->ymax){
+            x=id%(graph->xmax);
+            y=id/(graph->xmax);
+        }else{
+            y=id%(graph->ymax);
+            y=id/(graph->ymax);
+        }
+    
+    }
+
+    void random_to_balanced();
+    
+    
     
 };
 
