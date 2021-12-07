@@ -260,7 +260,34 @@ def prepare_model(
         constraint_expr = gp.LinExpr([1 for i in variables], variables)
         model.addLConstr(constraint_expr, GRB.LESS_EQUAL, 1)
 
-
+    # Add constraints: problem-specific constraints:
+    # at a certain time step, the horizontal and vertical edges
+    # cannot be used at the same time
+    for key in set(list(edge_horizontal.keys()) + list(edge_vertical.keys())):
+        try:
+            horizontal_variables = [
+                grb_variables[name] for name in edge_horizontal[key]
+            ]
+        except:
+            horizontal_variables = []
+        try:
+            vertical_variables = [
+                grb_variables[name] for name in edge_vertical[key]
+            ]
+        except:
+            vertical_variables = []
+        horizontal_expr = gp.LinExpr([1 for i in horizontal_variables],
+                                     horizontal_variables)
+        horizontal_usage_variable = model.addVar(vtype=GRB.BINARY)
+        model.addConstr(horizontal_expr, GRB.LESS_EQUAL,
+                        horizontal_usage_variable * horizontal_expr.size())
+        vertical_expr = gp.LinExpr([1 for i in vertical_variables],
+                                   vertical_variables)
+        vertical_usage_variable = model.addVar(vtype=GRB.BINARY)
+        model.addConstr(vertical_expr, GRB.LESS_EQUAL,
+                        vertical_usage_variable * vertical_expr.size())
+        model.addConstr(horizontal_usage_variable + vertical_usage_variable,
+                        GRB.LESS_EQUAL, 1)
     model.update()
     return model, grb_variables
 

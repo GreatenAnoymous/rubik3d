@@ -71,9 +71,18 @@ def save_instance_as_txt(scene_name:str,starts,goals,graph_size):
         file_content.write("max_comp_time=120000\n")
         for s,g in zip(starts,goals):
             file_content.write(str(s[0])+","+str(s[1])+","+str(s[2])+","+str(g[0])+","+str(g[1])+","+str(g[2])+"\n")
-        
+
+def generate_debug_rth2d():
+    xmax,ymax,zmax=(9,9,9)
+    z0=3
+    starts=[(x,y,1) for x in range(1,xmax,3) for y in range(0,ymax)]
+    goals=starts.copy()
+    np.random.shuffle(starts)
+    np.random.shuffle(goals)
+    save_instance_as_txt("./debug2d.scen",starts,goals,(xmax,ymax,zmax))
+    
+
     
 if __name__=="__main__":
     graph_size=(9,9,9)
-    starts,goals=generate_test_rth2d(graph_size)
-    save_instance_as_txt("./test.txt",starts,goals,graph_size)
+    generate_debug_rth2d()
