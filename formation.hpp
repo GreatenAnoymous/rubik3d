@@ -12,8 +12,7 @@
  * 
  */
 
-#ifndef FORMATION_HPP
-#define FORMATION_HPP
+#pragma once
 #include "common.hpp"
 
 class FormationControl{
@@ -35,4 +34,3 @@ private:
     void schedule(Paths3d &);
     void formDAG(const Paths3d &,DAG &dag_graph);
 };
-#endif

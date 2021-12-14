@@ -76,14 +76,17 @@ def save_instance_as_txt(scene_name:str,starts,goals,graph_size):
         for s,g in zip(starts,goals):
             file_content.write(str(s[0])+","+str(s[1])+","+str(s[2])+","+str(g[0])+","+str(g[1])+","+str(g[2])+"\n")
 
-def generate_debug_rth2d():
-    xmax,ymax,zmax=(9,9,9)
+def generate_debug():
+    xmax,ymax,zmax=(3,3,3)
     z0=3
-    starts=[(x,y,1) for x in range(1,xmax,3) for y in range(0,ymax)]
+    starts=[(x,y,z) for x in range(0,xmax) for y in range(0,ymax) for z in range(0,zmax)]
     goals=starts.copy()
     np.random.shuffle(starts)
     np.random.shuffle(goals)
-    save_instance_as_txt("./debug2d.scen",starts,goals,(xmax,ymax,zmax))
+    num=int(xmax*ymax*zmax/3)
+    starts=starts[0:num]
+    goals=goals[0:num]
+    save_instance_as_txt("./debug.scen",starts,goals,(xmax,ymax,zmax))
     
 def quasi_random_data():
     ss=[3,9,15,21,30,45,60]
@@ -101,4 +104,5 @@ def quasi_random_data():
 if __name__=="__main__":
     #graph_size=(9,9,9)
     #generate_debug_rth2d()
-    quasi_random_data()
+    #quasi_random_data()
+    generate_debug()

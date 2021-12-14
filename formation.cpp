@@ -26,7 +26,10 @@ FormationControl::FormationControl(Robots &robots,Grids3d *graph){
     for(auto &r:robots){
         starts.push_back(r->start);
         goals.push_back(r->goal);
+        // printf("start(%d,%d,%d)-->goal(%d,%d,%d)\n",r->start->x,r->start->y,r->start->z,
+            // r->goal->x,r->goal->y,r->goal->z);
     }
+    // printf("debug   ");
     this->graph=graph;
 }
 
@@ -70,6 +73,10 @@ void FormationControl::find_initial_paths(Paths3d & paths){
         auto pi=solver.solve();
         paths.push_back(pi);
     }
+    // for(auto &p:paths){
+    //     for(auto &v:p) printf("(%d:%d,%d,%d) ",v->id,v->x,v->y,v->z);
+    //     std::cout<<std::endl;
+    // }
 
 }
 

@@ -55,7 +55,7 @@ private:
  */
 class BFS_solver{
 public:
-    BFS_solver(Location3d *v);
+    BFS_solver(Location3d *v):start(v){}
     std::function<bool(Location3d *v)> isGoal;
     std::function<Configs(Location3d *)> getNeighbors;
     using openList=std::queue<Location3d*>;

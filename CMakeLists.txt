@@ -16,6 +16,6 @@ set(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3")
 
 
 
-add_executable(main common.cpp labp.cpp main.cpp mp3d.cpp rth2d.cpp rubik3d.cpp umapf3d.cpp formation.cpp)
-target_compile_features(main PUBLIC cxx_std_17)
+add_executable(main common.cpp labp.cpp main.cpp mp3d.cpp rth2d.cpp rubik3d.cpp umapf3d.cpp search.cpp formation.cpp)
+# target_compile_features(main PUBLIC cxx_std_17)
 target_link_libraries(main  ${Boost_LIBRARIES})
