@@ -11,6 +11,9 @@
 #include "rubik3d.hpp"
 #include <random>
 #include "umapf3d.hpp"
+#include"labp.hpp"
+#include "rth2d.hpp"
+#include "mp3d.hpp"
 ////////////////////////////////////////////////////// RTH3D /////////////////////////////////////////////////////////////////////////
 
 RTH_3d::RTH_3d(Robots & _r,Grids3d *_g):robots(_r),graph(_g){

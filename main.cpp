@@ -16,6 +16,7 @@
 #include "rubik3d.hpp"
 #include "umapf3d.hpp"
 #include "json.hpp"
+#include "formation.hpp"
 
 nlohmann::json data2d; 
 
@@ -48,13 +49,25 @@ void test_rth2d(){
 
 
 void test_rth3d(){
+    Robots test_robots;
+    Grids3d *test_graph;
+    read_instances("./test.scen",test_robots,test_graph);
+}
+
+void test_formation3d(){
+    Robots test_robots;
+    Grids3d *test_graph;
+    read_instances("./test.scen",test_robots,test_graph);
+    std::cout<<"num agents="<<test_robots.size()<<std::endl;
+    FormationControl test(test_robots,test_graph);
+    test.solve();
 
 }
 
 
 int main(int argc, char* argv[]){
     // test_read_instance();
-    test_rth2d();
+    // test_rth2d();
     return 0;
 
 }

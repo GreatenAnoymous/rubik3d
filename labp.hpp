@@ -18,12 +18,13 @@
 #include<vector>
 
 
+#define BIG 10000
 
 
 double labp_solve(std::vector <std::vector<double> >& costMatrix, std::vector<int>& Assignment);
 
 double lba_sparse(std::vector<std::tuple<int,int,double>>&costEdges, std::vector<int>& Assignment); //for solving sparse matrix
 
-// double labp_thresh(vector <vector<double> >& costMatrix, vector<int>& Assignment);
+double lap(int dim,std::vector<std::vector<double>> &costs,std::vector<int>&rowsol,std::vector<int> &colsol,std::vector<double> &u,std::vector<double> &v);
 
 #endif

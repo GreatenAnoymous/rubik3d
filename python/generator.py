@@ -11,11 +11,15 @@ def generate_random_instance(graph_size:Tuple,num_agents=-1):
     xmax,ymax,zmax=graph_size
     if num_agents==-1:
         num_agents=int(xmax*ymax*zmax/3)
-    starts=[]
-    goals=[]
-    return 
+    starts=[(i,j,k) for i in range(xmax) for j in range(ymax) for k in range(zmax)]
+    goals=starts.copy()
+    np.random.shuffle(starts)
+    np.random.shuffle(goals)
+    starts=starts[0:num_agents]
+    goals=goals[0:num_agents]
+    return starts,goals
 
-def generate_psuedo_random_instance(graph_size:Tuple,num_agents=-1):
+def generate_quasi_random_instance(graph_size:Tuple,num_agents=-1):
     xmax,ymax,zmax=graph_size
     if num_agents==-1:
         num_agents=int(xmax*ymax*zmax/3)
@@ -28,8 +32,8 @@ def generate_psuedo_random_instance(graph_size:Tuple,num_agents=-1):
                 tmp_goals=tmp_starts.copy()
                 np.random.shuffle(tmp_starts)
                 np.random.shuffle(tmp_goals)
-                starts.extend(tmp_starts[0:3])
-                goals.extend(tmp_goals[0:3])
+                starts.extend(tmp_starts[0:9])
+                goals.extend(tmp_goals[0:9])
     return starts,goals
 
 def generate_test_rth2d(graph_size:Tuple,num_agents=-1):
@@ -81,8 +85,20 @@ def generate_debug_rth2d():
     np.random.shuffle(goals)
     save_instance_as_txt("./debug2d.scen",starts,goals,(xmax,ymax,zmax))
     
-
+def quasi_random_data():
+    ss=[3,9,15,21,30,45,60]
+    for m in ss:
+        for k in range(20):
+            file_name="./instances/quasi_random/"+str(m)+'x'+str(m)+'_'+str(k)+'.scen'
+            print(file_name)
+            starts,goals=generate_quasi_random_instance((m,m,m))
+            save_instance_as_txt(file_name,starts,goals,(m,m,m))
+        #print(ok)
+            
+            
+    
     
 if __name__=="__main__":
-    graph_size=(9,9,9)
-    generate_debug_rth2d()
+    #graph_size=(9,9,9)
+    #generate_debug_rth2d()
+    quasi_random_data()
