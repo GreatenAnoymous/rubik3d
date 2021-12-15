@@ -14,14 +14,19 @@
 #include"labp.hpp"
 #include "rth2d.hpp"
 #include "mp3d.hpp"
+#include "formation.hpp"
+#include<thread>
+#include <future>
 ////////////////////////////////////////////////////// RTH3D /////////////////////////////////////////////////////////////////////////
 
 RTH_3d::RTH_3d(Robots & _r,Grids3d *_g):robots(_r),graph(_g){
-
+    getVertex=[&](int x,int y,int z){
+        return graph->getVertex(x,y,z);
+    };
 }
 
 void RTH_3d ::solve(){
-    prepare();
+    // prepare();
     //first do fat column (xz-plane) matching 
     lba_matching_fat();
     z_shuffle();
@@ -29,6 +34,7 @@ void RTH_3d ::solve(){
 
     xy_fitting();
     xy_shuffle();
+    for(auto &r:robots)r->current=r->inter_goal;
     z_fitting();
     z_shuffle();
 }
@@ -66,23 +72,27 @@ void RTH_3d::lba_matching_fat(){
     
     // std::unordered_map<point2d,Robots,boost::hash<point2d>> fat_column_dict;
     std::unordered_map<int,Robots> fat_column_dict;
+ 
     for(auto &r:robots){
         // point2d key={r->current->x,r->current->y};
         int key=get_plane_id(r->current->x,r->current->y);
         fat_column_dict[key].push_back(r);
     }
+ 
 
     for(int i=0;i<graph->zmax;i++){
         std::unordered_map<int,int>matching;
         std::unordered_map<point2d,Robot*,boost::hash<point2d>> arranged_robots;
         matching_helper(fat_column_dict,matching,arranged_robots,i);
         for(int xi=1;xi<graph->xmax;xi+=cell_size){
-            for(int yi=1;yi<graph->ymax;yi+=cell_size){
+            for(int yi=0;yi<graph->ymax;yi++){
                 int key=get_plane_id(xi,yi);
                 int column=matching[key];
                 int xt,yt;
+                // get_xy(column,xt,yt);
                 arranged_robots[{key,column}]->intermediate=
-                    getVertex(xt,yt,i);
+                    graph->getVertex(xi,yi,i);
+                // std::cout<<"robot "<<arranged_robots[{key,column}]->id<<" aranged in ("<<xt<<","<<yt<<","<<i<<")\n"; 
             }
         }
     }
@@ -108,13 +118,15 @@ void RTH_3d::matching_helper(std::unordered_map<int,Robots> &column_dict,
     for(auto const &column_i:column_dict){
         column_id.push_back(column_i.first);
     }  
-    for(auto const &i: column_id){
-        for(auto const &j:column_id){
+    for(int i=0;i<column_id.size();i++){
+        for(int j=0;j<column_id.size();j++){
             bool found=false;
             int min_d=max_inf;
+            int col=column_id[i];
+            int color=column_id[j];
             Robot* min_agent;
-            for(auto const &agent_i :column_dict[i]){
-                if(get_plane_id(agent_i->umapf_goal->y==j, agent_i->umapf_goal->x)==j and abs(agent_i->current->z-row)<min_d){
+            for(auto const &agent_i :column_dict[col]){
+                if(get_plane_id(agent_i->umapf_goal->x, agent_i->umapf_goal->y)==color and abs(agent_i->current->z-row)<min_d){
                     found=true;
                     min_d=abs(agent_i->current->z-row);
                     min_agent=agent_i;
@@ -122,7 +134,7 @@ void RTH_3d::matching_helper(std::unordered_map<int,Robots> &column_dict,
             }
             if(found){
                 costEdge.push_back({i,j,min_d});
-                arranged_agents[{i,j}]=min_agent;
+                arranged_agents[{col,color}]=min_agent;
             }
             else{
                 //(cost_matrix.back()).push_back(max_inf);
@@ -135,18 +147,23 @@ void RTH_3d::matching_helper(std::unordered_map<int,Robots> &column_dict,
     // std::cout<<costEdge.size()<<std::endl;
     std::vector<int> assignment;
     double cost=lba_sparse(costEdge,assignment);
-    for(auto c:column_id){
-        int color=assignment[c];
-        Robot* agent=arranged_agents[{c,color}];
-        auto it = std::find(column_dict[c].begin(), column_dict[c].end(), agent);
-        if(it!=column_dict[c].end()){
-            column_dict[c].erase(it);  
+    for(int c=0;c<column_id.size();c++){
+        int col=column_id[c];
+        int color_id=assignment[c];
+        int color=column_id[color_id];
+        Robot* agent=arranged_agents[{col,color}];
+        auto it = std::find(column_dict[col].begin(), column_dict[col].end(), agent);
+        if(it!=column_dict[col].end()){
+            column_dict[col].erase(it);  
         }else{
             throw std::runtime_error("NOT found the agent!");
         }
     }
-    for(auto c:column_id){
-        matching.insert({c,assignment[c]});
+    for(int c=0;c<column_id.size();c++){
+        int col_id=column_id[c];
+        int color_id=assignment[c];
+        int color=column_id[color_id];
+        matching.insert({col_id,color});
     }                
 
 }
@@ -180,9 +197,15 @@ void RTH_3d::z_shuffle(){
         for(int j=0;j<graph->ymax;j++){
             Robots agents;
             for(auto &r:robots){
+        
                 if(r->current->x<i+cell_size and r->current->x>=i and r->current->y==j) agents.push_back(r);
             }
-            Motion3d swapper(agents,{i,i+cell_size-1},{j,j},{0,graph->zmax-1},'z');
+            // for(auto &a:agents){
+            //     std::cout<<"debug "<<std::endl;
+            //     printf("i am debugging %d \n",a->id);
+              
+            // }
+            Motion3d swapper(agents,{i,i+cell_size-1},{j,j},{0,graph->zmax-1},'z',graph);
             swapper.reconfigure();
         }
     }
@@ -240,4 +263,46 @@ void RTH_3d::random_to_balanced(){
     }
 }
 
+
+void RTH_3d::random_to_balanced_fast(){
+    Configs bl_config1;
+    for(int i=0;i<graph->xmax;i+=3){
+        for(int j=0;j<graph->ymax;j+=3){
+            for(int k=0;k<graph->zmax;k+=3){
+                Configs tmp_list={getVertex(i+1,j,k),getVertex(i+1,j+1,k),getVertex(i+1,j+2,k),
+                    getVertex(i+1,j,k+1),getVertex(i+1,j+1,k+1),getVertex(i+1,j+2,k+1),
+                    getVertex(i+1,j,k+2),getVertex(i+1,j+1,k+2),getVertex(i+1,j+2,k+2)};
+                bl_config1.insert(bl_config1.end(),tmp_list.begin(),tmp_list.end());
+            }     
+        }
+    }
+    Configs starts,goals;
+    for(auto agent :robots){
+        starts.push_back(agent->start);
+        goals.push_back(agent->goal);
+    }
+
+    auto umapf=[&](Configs & starts,Configs &goals,Paths3d &returned){
+        FormationControl solver(starts,goals,graph);
+        solver.solve();
+        returned=solver.get_result();
+    };
+
+    Paths3d paths_s,paths_g;
+    std::thread th1(umapf,std::ref(starts),std::ref(bl_config1),std::ref(paths_s));
+    std::thread th2(umapf,std::ref(goals),std::ref(bl_config1),std::ref(paths_g));
+    th1.join();
+    th2.join();
+
+    for(int i=0;i<robots.size();i++){
+        // agents[i]->start=paths_s[i].back();
+        // agents[i]->goal=paths_g[i].back();
+        robots[i]->current=paths_s[i].back();
+        robots[i]->inter_goal=paths_g[i].back();
+        robots[i]->path.insert(robots[i]->path.end(),paths_s[i].begin()+1,paths_s[i].end());
+        robots[i]->umapf_goal_path=paths_g[i];
+        std::reverse(robots[i]->umapf_goal_path.begin(),robots[i]->umapf_goal_path.end());
+    }
+    
+}
 

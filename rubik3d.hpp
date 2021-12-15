@@ -62,6 +62,7 @@ protected:
     }
 
     void random_to_balanced();
+    void random_to_balanced_fast();
     
     
     

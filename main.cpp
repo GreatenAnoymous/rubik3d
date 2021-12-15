@@ -49,9 +49,14 @@ void test_rth2d(){
 
 
 void test_rth3d(){
+    std::ifstream ifs("./data2d.json");
+    data2d=nlohmann::json::parse(ifs);
     Robots test_robots;
     Grids3d *test_graph;
-    read_instances("./test.scen",test_robots,test_graph);
+    read_instances("./debug3d.scen",test_robots,test_graph);
+    RTH_3d solver(test_robots,test_graph);
+    solver.solve();
+    
 }
 
 void test_formation3d(){
@@ -68,7 +73,8 @@ void test_formation3d(){
 int main(int argc, char* argv[]){
     // test_read_instance();
     // test_rth2d();
-    test_formation3d();
+    // test_formation3d();
+    test_rth3d();
     return 0;
 
 }

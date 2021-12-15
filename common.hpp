@@ -41,6 +41,9 @@ public:
     int manhattan_dist(Location3d *other){
         return abs(x-other->x)+abs(y-other->y)+abs(z-other->z);
     }
+    std::string print(){
+        return "("+std::to_string(x)+","+std::to_string(y)+","+std::to_string(z)+")";
+    }
     // std::vector<Location3d*> neighbors;
 };
 

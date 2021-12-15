@@ -97,6 +97,19 @@ def quasi_random_data():
             starts,goals=generate_quasi_random_instance((m,m,m))
             save_instance_as_txt(file_name,starts,goals,(m,m,m))
         #print(ok)
+        
+def generate_3d_debug():
+    xmax,ymax,zmax=(3,3,3)
+    starts=[]
+    goals=[]
+    for k in range(0,zmax):
+        for i in range(1,xmax,3):
+            for j in range(0,ymax):
+                starts.append((i,j,k))
+                goals.append((i,j,k))
+    np.random.shuffle(starts)
+    np.random.shuffle(goals)
+    save_instance_as_txt("../debug3d.scen",starts,goals,(xmax,ymax,zmax))
             
             
     
@@ -105,4 +118,4 @@ if __name__=="__main__":
     #graph_size=(9,9,9)
     #generate_debug_rth2d()
     #quasi_random_data()
-    generate_debug()
+    generate_3d_debug()

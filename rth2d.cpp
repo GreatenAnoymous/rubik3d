@@ -30,12 +30,16 @@ void RTH_2d::solve(){
     prepare();
     matching();
     x_shuffle();
-
+       for(auto &r:robots) assert(r->current==r->intermediate);
     y_fitting();
     y_shuffle();
+
     x_fitting();
     x_shuffle();
-    std::cout<<"solved!"<<std::endl;
+         
+
+  
+    // std::cout<<"solved!"<<std::endl;
 }
 
 //move the robots to the middle line if needed
@@ -202,6 +206,7 @@ void RTH_2d::x_shuffle(){
         Motion3d swapper(robots1,{0,graph->xmax-1},{i,i+cell_size-1},{zs,zs},'x',graph);
         swapper.reconfigure();
     }
+    
    
 }
 

@@ -73,10 +73,6 @@ void FormationControl::find_initial_paths(Paths3d & paths){
         auto pi=solver.solve();
         paths.push_back(pi);
     }
-    // for(auto &p:paths){
-    //     for(auto &v:p) printf("(%d:%d,%d,%d) ",v->id,v->x,v->y,v->z);
-    //     std::cout<<std::endl;
-    // }
 
 }
 
@@ -87,7 +83,6 @@ void FormationControl::find_initial_paths(Paths3d & paths){
  */
 
 void FormationControl::update_paths(Paths3d &old_paths){
-    std::cout<<"/////////////////////////updating/////////////////////\n";
     int num_agents=old_paths.size();
     auto toPathSet=[](Path3d &p){
         std::unordered_set<Location3d*> path_set;

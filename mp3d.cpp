@@ -147,7 +147,10 @@ void Motion3d::reconfigure_z(){
 
 
 void Motion3d::insert_end_path(){
-
+    for(auto &agent:robots) {
+        agent->path.insert(agent->path.end(), agent->inter_path.begin(), agent->inter_path.end());
+        agent->current = agent->path.back();
+    }
 }
 /**
  * @brief 
@@ -164,6 +167,13 @@ void Motion3d::prepare_helper(int min_x,int min_y,int min_z){
     std::function<Location3d *(int vid)> get_back_vertex;
     Robots robots1,robots2;
     std::vector<Location3d*>vertices;
+ 
+    // for(auto &robot:robots){
+    //     // printf("robot %d: (%d,%d,%d) \n",robot->id,robot->intermediate->x,robot->intermediate->y,robot->intermediate->z);
+    //     // std::cout<<"robot ";
+    //     // std::cout<<robot->id<<" :";
+    //     std::cout<<robot->start->print()<<" "<<robot->intermediate->print()<<std::endl;
+    // }
 
     auto get_index = [](std::vector<Location3d*> &vertices, Location3d *v) {
         auto it = find(vertices.begin(), vertices.end(), v);
@@ -230,16 +240,20 @@ void Motion3d::prepare_helper(int min_x,int min_y,int min_z){
     }
 
     else if(orientation=='z'){
+    
         for(int x=min_x;x<min_x+cell_size;x++)
-            for(int z=min_z;z<min_z+cell_size;z++)
+            for(int z=min_z;z<min_z+cell_size;z++){
+                // printf("debug %d %d %d\n",x,min_y,z);
                 vertices.push_back(getVertex(x,min_y,z));
+            }
+                
 
         find_robots(vertices,robots1,robots2);
     }
 
     if(robots1.size()!=0){
         auto start_id=get_json_key(robots1,'s');
-        // std::cout<<start_id<<std::endl;
+      
         // std::cout<<data2d.size()<<std::endl;
         std::vector<std::vector<int>> solution = data2d[start_id];
         for(int i=0;i<robots1.size();i++){
@@ -253,7 +267,7 @@ void Motion3d::prepare_helper(int min_x,int min_y,int min_z){
         }
     }
     if(robots2.size()!=0){
-     
+      
         auto start_id=get_json_key(robots2,'g');
         // std::cout<<start_id<<std::endl;
         std::vector<std::vector<int>> solution = data2d[start_id];
@@ -262,7 +276,7 @@ void Motion3d::prepare_helper(int min_x,int min_y,int min_z){
             for (auto vid : solution[i]){
                 new_path.push_back(vertices[vid]);
             }
-            // assert(new_path[0]==robots2[i]->intermediate);
+            assert(new_path[0]==robots2[i]->intermediate);
             robots2[i]->inter2 = new_path.back();
           
             new_path.pop_back();
