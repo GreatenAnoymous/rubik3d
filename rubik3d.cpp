@@ -27,16 +27,21 @@ RTH_3d::RTH_3d(Robots & _r,Grids3d *_g):robots(_r),graph(_g){
 
 void RTH_3d ::solve(){
     // prepare();
+    random_to_balanced_fast();
     //first do fat column (xz-plane) matching 
     lba_matching_fat();
+      
     z_shuffle();
+   
     //for each x-z plane apply 3-m shuffle to get to the matched positions
-
+   
     xy_fitting();
     xy_shuffle();
-    for(auto &r:robots)r->current=r->inter_goal;
+    
     z_fitting();
     z_shuffle();
+     
+    // save_solutions("test.txt",robots,0,true);
 }
 
 /**
@@ -193,6 +198,7 @@ void RTH_3d::xy_shuffle(){
 
 
 void RTH_3d::z_shuffle(){
+    
     for(int i=0;i<graph->xmax;i+=cell_size){
         for(int j=0;j<graph->ymax;j++){
             Robots agents;
@@ -200,15 +206,12 @@ void RTH_3d::z_shuffle(){
         
                 if(r->current->x<i+cell_size and r->current->x>=i and r->current->y==j) agents.push_back(r);
             }
-            // for(auto &a:agents){
-            //     std::cout<<"debug "<<std::endl;
-            //     printf("i am debugging %d \n",a->id);
-              
-            // }
+            
             Motion3d swapper(agents,{i,i+cell_size-1},{j,j},{0,graph->zmax-1},'z',graph);
             swapper.reconfigure();
         }
     }
+         
     fill_paths(robots);
 }
 
@@ -222,6 +225,41 @@ void RTH_3d::z_fitting(){
     for(auto &r:robots) r->intermediate=getVertex(r->current->x,r->current->y,r->umapf_goal->z);
 }
 
+void RTH_3d::LBA_heuristic(){
+    std::unordered_map<int,Robots> row_dict;
+   
+    for(auto &agent:robots){
+        row_dict[agent->intermediate->z].push_back(agent);
+    }
+
+    std::vector<std::vector<double>>cost_matrix;
+    std::vector<int> rows;
+    for(const auto &pair:row_dict){
+        rows.push_back(pair.first);
+    }
+   
+    for(const auto &row:rows){
+        // Agents as=row_dict[row];
+        std::vector<double> cost_i;
+        cost_matrix.push_back(cost_i);
+        for(const auto & row2:rows){
+            double cost=0;
+            for(auto&agent :row_dict[row]){
+                cost=std::max(cost,fabs(agent->current->z-row2));  
+            }
+            cost_matrix.back().push_back(cost);
+        }
+    }
+    std::vector<int> assignment;
+    labp_solve(cost_matrix,assignment);
+    // std::cout<<"solved"<<std::endl;
+    for(int i=0;i<rows.size();i++){
+        for(auto&agent: row_dict[rows[i]]){
+            agent->intermediate=graph->getVertex(rows[assignment[i]],agent->intermediate->y,agent->intermediate->z);
+        //    std::cout<< agent->intermediate->print()<<std::endl;
+        }
+    }
+}
 
 
 void RTH_3d::random_to_balanced(){
@@ -256,7 +294,7 @@ void RTH_3d::random_to_balanced(){
         // agents[i]->start=paths_s[i].back();
         // agents[i]->goal=paths_g[i].back();
         robots[i]->current=paths_s[i].back();
-        robots[i]->inter_goal=paths_g[i].back();
+        robots[i]->umapf_goal=paths_g[i].back();
         robots[i]->path.insert(robots[i]->path.end(),paths_s[i].begin()+1,paths_s[i].end());
         robots[i]->umapf_goal_path=paths_g[i];
         std::reverse(robots[i]->umapf_goal_path.begin(),robots[i]->umapf_goal_path.end());
@@ -289,6 +327,7 @@ void RTH_3d::random_to_balanced_fast(){
     };
 
     Paths3d paths_s,paths_g;
+ 
     std::thread th1(umapf,std::ref(starts),std::ref(bl_config1),std::ref(paths_s));
     std::thread th2(umapf,std::ref(goals),std::ref(bl_config1),std::ref(paths_g));
     th1.join();
@@ -298,7 +337,7 @@ void RTH_3d::random_to_balanced_fast(){
         // agents[i]->start=paths_s[i].back();
         // agents[i]->goal=paths_g[i].back();
         robots[i]->current=paths_s[i].back();
-        robots[i]->inter_goal=paths_g[i].back();
+        robots[i]->umapf_goal=paths_g[i].back();
         robots[i]->path.insert(robots[i]->path.end(),paths_s[i].begin()+1,paths_s[i].end());
         robots[i]->umapf_goal_path=paths_g[i];
         std::reverse(robots[i]->umapf_goal_path.begin(),robots[i]->umapf_goal_path.end());

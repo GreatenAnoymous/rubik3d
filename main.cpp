@@ -53,16 +53,19 @@ void test_rth3d(){
     data2d=nlohmann::json::parse(ifs);
     Robots test_robots;
     Grids3d *test_graph;
-    read_instances("./debug3d.scen",test_robots,test_graph);
+    read_instances("./python/instances/quasi_random/9x9_1.scen",test_robots,test_graph);
     RTH_3d solver(test_robots,test_graph);
     solver.solve();
+    solver.save_result("./test.txt",0,false);
+    
     
 }
 
 void test_formation3d(){
     Robots test_robots;
     Grids3d *test_graph;
-    read_instances("./debug.scen",test_robots,test_graph);
+    // read_instances("./debug.scen",test_robots,test_graph);
+    read_instances("./python/instances/quasi_random/9x9_10.scen",test_robots,test_graph);
     std::cout<<"num agents="<<test_robots.size()<<std::endl;
     FormationControl test(test_robots,test_graph);
     test.solve();
@@ -70,11 +73,29 @@ void test_formation3d(){
 }
 
 
+void rth3dexe(int argc,char* argv[]){
+    std::ifstream ifs("./data2d.json");
+    data2d=nlohmann::json::parse(ifs);
+    std::string scen_file=argv[1];
+    std::string out_file=argv[2];
+    Robots test_robots;
+    Grids3d *test_graph;
+    read_instances(scen_file,test_robots,test_graph);
+    RTH_3d solver(test_robots,test_graph);
+    auto t1=Time::now();
+    solver.solve();
+    auto t2=Time::now();
+    fsec dt=t2-t1;
+    solver.save_result(out_file,dt.count(),false);
+
+}
+
 int main(int argc, char* argv[]){
     // test_read_instance();
     // test_rth2d();
     // test_formation3d();
-    test_rth3d();
+    // test_rth3d();
+    rth3dexe(argc,argv);
     return 0;
 
 }

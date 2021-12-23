@@ -30,14 +30,14 @@ void RTH_2d::solve(){
     prepare();
     matching();
     x_shuffle();
-       for(auto &r:robots) assert(r->current==r->intermediate);
+     
     y_fitting();
     y_shuffle();
 
     x_fitting();
     x_shuffle();
          
-
+    // for(auto &r:robots) assert(r->current==r->inter_goal);
   
     // std::cout<<"solved!"<<std::endl;
 }
@@ -137,6 +137,7 @@ void RTH_2d::matching_helper(std::unordered_map<int,Robots> &column_dict,
 
 
 void RTH_2d::LBA_heuristic(){
+ 
     std::unordered_map<int,Robots> row_dict;
    
     for(auto &agent:robots){
@@ -160,15 +161,18 @@ void RTH_2d::LBA_heuristic(){
             }
             cost_matrix.back().push_back(cost);
         }
-        // cost_matrix.back.push_back(cost_i);
     }
     std::vector<int> assignment;
     labp_solve(cost_matrix,assignment);
+    // std::cout<<"solved"<<std::endl;
     for(int i=0;i<rows.size();i++){
         for(auto&agent: row_dict[rows[i]]){
-            agent->intermediate->x=rows[assignment[i]];
+            agent->intermediate=graph->getVertex(rows[assignment[i]],agent->intermediate->y,agent->intermediate->z);
+           
+        //    std::cout<< agent->intermediate->print()<<std::endl;
         }
     }
+    
 }
 
 

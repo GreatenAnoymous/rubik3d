@@ -41,26 +41,43 @@ FormationControl::FormationControl(Robots &robots,Grids3d *graph){
 void FormationControl::find_initial_paths(Paths3d & paths){
     paths.clear();
     using costMatrix=std::vector<std::vector<double>>;
+    using costEdges=std::vector<std::tuple<int,int,double>>;
     auto m=starts.size();
     std::vector<int> rowsol(m);
-    std::vector<int> colsol(m);
-    std::vector<double> u(m);
-    std::vector<double> v(m);
+    // std::vector<int> colsol(m);
+    // std::vector<double> u(m);
+    // std::vector<double> v(m);
    
-    int threshold=20;        //if there is a lap algorithm for sparse matrix, that would be great
+    int threshold=7;        //if there is a lap algorithm for sparse matrix, that would be great
     bool feasible=false;
-    costMatrix costs(m,std::vector<double>(m,BIG));
+    // costMatrix costs(m,std::vector<double>(m,BIG));
+    costEdges costs;
     for(int i=0;i<m;i++){
         for(int j=0;j<m;j++){
             double dist=starts[i]->manhattan_dist(goals[j]);
-            if(dist<threshold) costs[i][j]=dist;
+            if(dist<threshold) costs.push_back({i,j,dist});
         }
     }
-    lap(m,costs,rowsol,colsol,u,v);
+    // for(int i=0;i<m;i++){
+    //     std::cout<<i<<":";
+    //     for(auto const &[j,cj]:costs[i]){
+    //         std::cout<<"("<<j<<","<<cj<<") ";
+    //     }
+    //     std::cout<<std::endl;
+    // }
+
+    
+  
+    auto best_cost=lap_sparse(costs,rowsol);
+    // for(int i=0;i<m;i++){
+    //     std::cout<<i<<" "<<rowsol[i]<<std::endl;
+    // }
+    // std::cout<<best_cost<<" the best cost\n";
     Configs new_goals;
     for(int i=0;i<m;i++){
         new_goals.push_back(goals[rowsol[i]]);
     }
+
     goals.swap(new_goals);
     for(int i=0;i<m;i++){
         BFS_solver solver(starts[i]);
@@ -160,7 +177,7 @@ void FormationControl::update_paths(Paths3d &old_paths){
             if(degrees.find(v->id)!=degrees.end()) degrees[v->id]--;
         }
     }
-    std::cout<<"updated : num_agents="<<new_paths.size()<<std::endl;
+    // std::cout<<"updated : num_agents="<<new_paths.size()<<std::endl;
     old_paths.swap(new_paths);    
 }
 

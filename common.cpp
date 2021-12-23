@@ -47,6 +47,7 @@ Grids3d::~Grids3d(){
  */
 
 Location3d* Grids3d::getVertex(int id){
+    assert(id<nodes.size());
     return nodes[id];
 }
 
@@ -184,7 +185,9 @@ void save_solutions(std::string file_name,Robots&robots,double runtime,bool save
     out<<"solutions="<<std::endl;
     for(int i=0;i<robots.size();i++){
         out<<i<<":";
+     
         for(const auto &v:robots[i]->path){
+           
             out<<'('<<v->x<<","<<v->y<<","<<v->z<<"),";
         }
         out<<std::endl;

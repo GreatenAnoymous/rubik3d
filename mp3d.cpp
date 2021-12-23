@@ -123,21 +123,31 @@ void Motion3d::reconfigure_y(){
 void Motion3d::reconfigure_z(){
     if(robots.empty()) return;
     prepare();
+    
     fill_paths(robots);
+  
     for(auto &r:robots){
         int xs,ys,zs,xg,yg,zg;
         std::tie(xs,ys,zs)=std::make_tuple(r->current->x,r->current->y,r->current->z);
         std::tie(xg,yg,zg)=std::make_tuple(r->inter2->x,r->inter2->y,r->inter2->z);
+        // printf("(%d,%d,%d)--->(%d,%d,%d)\n",xs,ys,zs,xg,yg,zg);
         if(zg>zs){
             for(int z=zs;z<zg+1;z++)
-                r->path.emplace_back(getVertex(xs,ys+1,z));
+                r->path.emplace_back(getVertex(xs+1,ys,z));
         }
         else{
             for(int z=zs;z>zg-1;z--)
-                r->path.emplace_back(getVertex(xs,ys-1,z));
+                r->path.emplace_back(getVertex(xs-1,ys,z));
         }
+        //  std::cout<<r->id<<std::endl;
+        // for(auto &v:r->path) printf("(%d %d %d)=>",v->x,v->y,v->z);
+        // std::cout<<"\n";
         r->path.emplace_back(getVertex(xg,yg,zg));
+       
     }
+
+    
+  
     fill_paths(robots);
     insert_end_path();
     fill_paths(robots);

@@ -34,6 +34,8 @@ def generate_quasi_random_instance(graph_size:Tuple,num_agents=-1):
                 np.random.shuffle(tmp_goals)
                 starts.extend(tmp_starts[0:9])
                 goals.extend(tmp_goals[0:9])
+    np.random.shuffle(starts)
+    np.random.shuffle(goals)
     return starts,goals
 
 def generate_test_rth2d(graph_size:Tuple,num_agents=-1):
@@ -99,23 +101,28 @@ def quasi_random_data():
         #print(ok)
         
 def generate_3d_debug():
-    xmax,ymax,zmax=(3,3,3)
-    starts=[]
-    goals=[]
-    for k in range(0,zmax):
-        for i in range(1,xmax,3):
-            for j in range(0,ymax):
-                starts.append((i,j,k))
-                goals.append((i,j,k))
-    np.random.shuffle(starts)
-    np.random.shuffle(goals)
-    save_instance_as_txt("../debug3d.scen",starts,goals,(xmax,ymax,zmax))
+    ss=[3,9,15,21,30,45,60]
+    for m in ss:
+        for v in range(20):
+            xmax,ymax,zmax=(m,m,m)
+            starts=[]
+            goals=[]
+            for k in range(0,zmax):
+                for i in range(1,xmax,3):
+                    for j in range(0,ymax):
+                        starts.append((i,j,k))
+                        goals.append((i,j,k))
+            np.random.shuffle(starts)
+            np.random.shuffle(goals)
+            save_instance_as_txt("./instances/already_center/"+str(m)+'x'+str(m)+'_'+str(v)+'.scen',starts,goals,(xmax,ymax,zmax))
             
-            
+
+def generate_flat_quasi_random():
+                
     
     
 if __name__=="__main__":
     #graph_size=(9,9,9)
     #generate_debug_rth2d()
-    #quasi_random_data()
-    generate_3d_debug()
+    quasi_random_data()
+    #generate_3d_debug()

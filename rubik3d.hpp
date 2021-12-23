@@ -26,6 +26,9 @@ public:
     RTH_3d(){}
     RTH_3d(Robots &, Grids3d *graph);
     void solve();
+    void save_result(std::string out_name,double runtime=0,bool save_paths=false){
+        save_solutions(out_name,robots,runtime,save_paths);
+    } 
 
 protected:
     Robots robots;
@@ -45,7 +48,7 @@ protected:
     std::function<Location3d*(int,int,int)> getVertex;
     void prepare_helper(int i,int j,int k,robotPlaceMap & ,robotPlaceMap &);
     bool use_umapf=false;
-
+    void LBA_heuristic();
     int get_plane_id(int x,int y){
         if(graph->xmax>=graph->ymax) return x+graph->xmax*y;
         else return y+graph->ymax*x;

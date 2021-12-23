@@ -11,6 +11,7 @@
 #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/max_cardinality_matching.hpp>
 #include <boost/heap/fibonacci_heap.hpp>
+#include <ortools/graph/assignment.h>
 
 using Graph =boost::adjacency_list<boost::listS, boost::vecS, boost::undirectedS>;
 using Vertex=boost::graph_traits<Graph>::vertex_descriptor;
@@ -203,11 +204,6 @@ double lap(int dim,
   std::vector<double> d(dim);
   std::vector<int> pred(dim);
 
-//   free = new int[dim];       // list of unassigned ints.
-//   intlist = new int[dim];    // list of intumns to be scanned in various ways.
-//   matches = new int[dim];    // counts how many times a int could be assigned.
-//   d = new double[dim];         // 'double-distance' in augmenting path calculation.
-//   pred = new int[dim];       // int-predecessor of intumn in augmenting/alternating path.
 
   // init how many times a int will be assigned in the intumn reduction.
   for (i = 0; i < dim; i++)
@@ -273,7 +269,6 @@ double lap(int dim,
     {
       i = free[k];
       k++;
-
     //       find minimum and second minimum reduced double over intumns.
       umin = assigndouble[i][0] - v[0];
       j1 = 0;
@@ -446,11 +441,21 @@ double lap(int dim,
     lapdouble = lapdouble + assigndouble[i][j];
   }
 
-   // free reserved memory.
-//   delete[] pred;
-//   delete[] free;
-//   delete[] intlist;
-//   delete[] matches;
-//   delete[] d;
+
   return lapdouble;
+}
+
+
+double lap_sparse(std::vector<std::tuple<int,int,double>>&costEdges,std::vector<int>&rowsol){
+  
+  operations_research::SimpleLinearSumAssignment assignment;
+  for(auto const &edge:costEdges){
+    assignment.AddArcWithCost(std::get<0>(edge),std::get<1>(edge),std::get<2>(edge));
+  }
+  if (assignment.Solve() == operations_research::SimpleLinearSumAssignment::OPTIMAL){
+    for (int node = 0; node < assignment.NumNodes(); ++node){
+      rowsol[node]=assignment.RightMate(node);
+    } 
+  }
+  return assignment.OptimalCost();
 }
