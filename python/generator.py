@@ -91,7 +91,7 @@ def generate_debug():
     save_instance_as_txt("./debug.scen",starts,goals,(xmax,ymax,zmax))
     
 def quasi_random_data():
-    ss=[3,9,15,21,30,45,60]
+    ss=[75]
     for m in ss:
         for k in range(20):
             file_name="./instances/quasi_random/"+str(m)+'x'+str(m)+'_'+str(k)+'.scen'
@@ -118,11 +118,20 @@ def generate_3d_debug():
             
 
 def generate_flat_quasi_random():
+    K=6
+    ss=[210,240,270,300]
+    for m in ss:
+        for k in range(20):
+            file_name="./instances/quasi_random_flatK6/"+str(m)+'x'+str(m)+'_'+str(k)+'.scen'
+            print(file_name)
+            starts,goals=generate_quasi_random_instance((m,m,K))
+            save_instance_as_txt(file_name,starts,goals,(m,m,K))
                 
     
     
 if __name__=="__main__":
     #graph_size=(9,9,9)
     #generate_debug_rth2d()
-    quasi_random_data()
+    #quasi_random_data()
     #generate_3d_debug()
+    generate_flat_quasi_random()

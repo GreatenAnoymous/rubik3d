@@ -96,7 +96,10 @@ using Robots=std::vector<Robot*>;
 
 void read_instances(std::string file_name,Robots &robots,Grids3d *&graph);
 void save_solutions(std::string file_name,Robots&robots,double runtime,bool save_paths);
-void check_feasible(Paths3d &paths);
+void check_feasible(Robots &);
+void check_feasible_bruteForce(Robots &);
+void format_paths(Paths3d &paths);
 void evaluate_result(Robots &robots,int &makespan,int &makespanLB,int &soc,int &socLB);   
 void fill_paths(Robots &robots,int makespan=-1);
 void shrink_paths(Robots&robots);
+void print_one_path(Path3d &path);

@@ -71,7 +71,7 @@ void RTH_2d::matching(){
                 getV(3*i+1,color,zs);
         }
     }
-    // LBA_heuristic();
+    LBA_heuristic();
 }
 
 /**

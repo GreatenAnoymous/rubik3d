@@ -55,6 +55,10 @@ def call_rth3d(scen_name,output_name):
     output=check_output(cmd,stderr=STDOUT,timeout=300).decode('utf-8')
 
 
+def call_rth3dlba(scen_name,output_name):
+    cmd=['./rthlba',scen_name,output_name]
+    output=check_output(cmd,stderr=STDOUT,timeout=300).decode('utf-8')
+
 def run_already():
     ss=[15]
     for s in ss:
@@ -76,14 +80,14 @@ def run_already2():
             
 
 def run_random3d():            
-    ss=[3,9,15,21,30,45,60]
+    ss=[3,9,15,21,30,45,60,75]
     for s in ss:
         for k in range(20):
             scen_name="./instances/quasi_random/"+str(s)+'x'+str(s)+'_'+str(k)+'.scen'
-            out_name='./data/quasi_random/rth3d/'+str(s)+'x'+str(s)+'_'+str(k)+'.txt'
+            out_name='./data/random/rth3dlba/'+str(s)+'x'+str(s)+'_'+str(k)+'.txt'
             print(scen_name)
             try:
-                call_rth3d(scen_name,out_name)  
+                call_rth3dlba(scen_name,out_name)  
             except:
                 pass
 
@@ -100,6 +104,32 @@ def run_random_ecbs3d():
                 pass
                 
 
+def run_random_flat_rth3d():
+    ss=[6,9,15,30,45,60,75,90,120,150,180,210,240,270]
+    for s in ss:
+        for k in range(20):
+            scen_name="./instances/quasi_random_flatK6/"+str(s)+'x'+str(s)+'_'+str(k)+'.scen'
+            out_name='./data/random_flatK6/rth3dlba/'+str(s)+'x'+str(s)+'_'+str(k)+'.txt'
+            print(scen_name)
+            try:
+                call_rth3dlba(scen_name,out_name)  
+            except:
+                pass
+                
+def run_random_flat_ecbs3d():
+    ss=[6,9,15,30]
+    for s in ss:
+        for k in range(20):
+            scen_name="./instances/quasi_random_flatK6/"+str(s)+'x'+str(s)+'_'+str(k)+'.scen'
+            out_name='./data/quasi_random_flatK6/ecbs3d/'+str(s)+'x'+str(s)+'_'+str(k)+'.txt'
+            print(scen_name)
+            try:
+                call_ecbs(scen_name,out_name) 
+            except:
+                pass
+                
             
-run_random_ecbs3d()
+run_random_flat_rth3d()
+run_random3d()
+#run_random_flat_ecbs3d()
 #run_already2()

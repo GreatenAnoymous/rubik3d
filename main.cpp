@@ -86,7 +86,7 @@ void rth3dexe(int argc,char* argv[]){
     solver.solve();
     auto t2=Time::now();
     fsec dt=t2-t1;
-    solver.save_result(out_file,dt.count(),false);
+    solver.save_result(out_file,dt.count(),true);
 
 }
 

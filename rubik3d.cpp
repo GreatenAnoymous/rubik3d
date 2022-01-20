@@ -41,6 +41,8 @@ void RTH_3d ::solve(){
     z_fitting();
     z_shuffle();
      
+    append_umapf_path();
+    // check_feasible_bruteForce(robots);  
     // save_solutions("test.txt",robots,0,true);
 }
 
@@ -101,7 +103,7 @@ void RTH_3d::lba_matching_fat(){
             }
         }
     }
-    // matching_heuristic();
+    // LBA_heuristic();
 }
 
 /**
@@ -288,6 +290,7 @@ void RTH_3d::random_to_balanced(){
     solver1.solve();
     solver2.solve();
     Paths3d paths_s=solver1.get_result();// start to balanced
+  
     Paths3d paths_g=solver2.get_result();   //goal to balanced
 
     for(int i=0;i<robots.size();i++){
@@ -332,7 +335,12 @@ void RTH_3d::random_to_balanced_fast(){
     std::thread th2(umapf,std::ref(goals),std::ref(bl_config1),std::ref(paths_g));
     th1.join();
     th2.join();
-
+    format_paths(paths_s);
+    format_paths(paths_g);
+    // print_one_path(paths_s[0]);
+    // print_one_path(paths_g[0]);
+    // printf("(%d,%d,%d)\n",starts[0]->x,starts[0]->y,starts[0]->z);
+    // exit(0);
     for(int i=0;i<robots.size();i++){
         // agents[i]->start=paths_s[i].back();
         // agents[i]->goal=paths_g[i].back();
@@ -343,5 +351,15 @@ void RTH_3d::random_to_balanced_fast(){
         std::reverse(robots[i]->umapf_goal_path.begin(),robots[i]->umapf_goal_path.end());
     }
     
+}
+
+
+void RTH_3d::append_umapf_path(){
+    
+    for(auto &robot:robots){
+        
+        robot->path.insert(robot->path.end(),robot->umapf_goal_path.begin(),robot->umapf_goal_path.end());
+    }
+    fill_paths(robots);
 }
 

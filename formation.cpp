@@ -153,7 +153,7 @@ void FormationControl::update_paths(Paths3d &old_paths){
         };
         Path3d pi=searcher.solve();
 
-        assert( not pi.empty());
+        
         auto si=pi.back();
         startSet.erase(si);
         goalSet.erase(standAloneGoal);
@@ -177,6 +177,7 @@ void FormationControl::update_paths(Paths3d &old_paths){
             if(degrees.find(v->id)!=degrees.end()) degrees[v->id]--;
         }
     }
+    
     // std::cout<<"updated : num_agents="<<new_paths.size()<<std::endl;
     old_paths.swap(new_paths);    
 }
@@ -190,7 +191,7 @@ void FormationControl::update_paths(Paths3d &old_paths){
 void FormationControl::schedule(Paths3d &old_paths){
     auto num_agents=old_paths.size();
     using timeObstacle=std::tuple<int,int>;
-    Paths3d timed_paths;
+    Paths3d timed_paths(num_agents);
     std::unordered_set<timeObstacle,boost::hash<timeObstacle>> reserveTable;
     for(auto &p:old_paths){
         Path3d pi;
@@ -210,7 +211,11 @@ void FormationControl::schedule(Paths3d &old_paths){
                 t++;
             }          
         }  
-        timed_paths.push_back(pi);
+        auto si=pi[0];
+        auto itr=std::find(starts.begin(),starts.end(),si);
+        int index=std::distance(starts.begin(), itr);
+        timed_paths[index]=pi;
+        // timed_paths.push_back(pi);
     }
     old_paths.swap(timed_paths);
 }

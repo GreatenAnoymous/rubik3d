@@ -224,3 +224,100 @@ void shrink_paths(Robots&robots){
         while(r->path.back()==r->path.end()[-2]) r->path.pop_back();
     }
 }
+
+/**
+ * @brief 
+ * 
+ * @param robots 
+ */
+
+void check_feasible(Robots &robots){
+    int makespan=0;
+
+    auto get_v_string=[](Robot*r,int t){
+        assert(r->path.size()>t);
+        std::cout<<r->id <<" "<<t<<" "<<r->path[t]->id<<std::endl;
+        auto result=std::to_string(r->id)+"-"+std::to_string(t)+"-"+std::to_string(r->path[t]->id);
+        std::cout<<"OK"<<std::endl;
+        return result;
+    };
+
+     auto get_e_string=[](Robot*r,int t){
+        if(r->path[t-1]->id<r->path[t]->id)
+            return std::to_string(r->id)+"-"+std::to_string(t)+"-"+std::to_string(r->path[t-1]->id)+"-"+std::to_string(r->path[t]->id);
+        else
+            return std::to_string(r->id)+"-"+std::to_string(t)+"-"+std::to_string(r->path[t]->id)+"-"+std::to_string(r->path[t-1]->id);
+    };
+
+    for(auto &r:robots){
+        makespan=std::max(makespan,(int)r->path.size());
+    }
+    for(int t=1;t<makespan;t++){
+        std::unordered_set<std::string> v_obs;
+        std::unordered_set<std::string> e_obs;
+        bool collision=false;
+        for(auto &r:robots){
+            std::string vobs=get_v_string(r,t);
+            if(v_obs.find(vobs)!=v_obs.end()){
+                collision=true;
+                assert(collision==false);
+            }
+            v_obs.insert(vobs);
+            if(r->path[t]==r->path[t-1]) continue;
+            std::string eobs=get_e_string(r,t);
+            if(e_obs.find(eobs)!=e_obs.end()){
+                collision=true;
+                assert(collision==false);
+            }
+        }
+    }
+    std::cout<<"no collision!"<<std::endl;
+}
+
+
+void check_feasible_bruteForce(Robots &  robots){
+    int makespan=0;
+    for(auto &r:robots){
+        makespan=std::max(makespan,(int)r->path.size());
+    }
+
+    fill_paths(robots);
+
+    for(int t=1;t<makespan;t++){
+        for(int i=0;i<robots.size();i++){
+            for(int j=i+1;j<robots.size();j++){
+                if(robots[i]->path[t]==robots[j]->path[t]) {
+                    printf("Vertex collision (%d,%d,%d,%d)\n",i,j,t,robots[i]->path[t]->id);
+                    assert(false);
+                }
+                if(robots[i]->path[t-1]==robots[j]->path[t] and robots[i]->path[t]==robots[j]->path[t-1]){
+                    printf("Edge collision (%d,%d,%d, %d->%d)\n",i,j,t,robots[i]->path[t-1]->id,robots[i]->path[t]->id);
+                    assert(false);
+                }
+            }
+        }
+    }
+    std::cout<<"no collision!"<<std::endl;
+}
+
+void format_paths(Paths3d &paths){
+    size_t makespan=0;
+    for(int i=0;i<paths.size();i++){
+        makespan=std::max(paths[i].size(),makespan);
+    }
+    for(auto &p:paths){
+        while(p.size()<makespan)p.push_back(p.back());
+    }
+}
+
+/**
+ * @brief 
+ * 
+ * @param paths 
+ */
+void print_one_path(Path3d &path){
+    for(auto &v:path){
+        printf("(%d,%d,%d) ",v->x,v->y,v->z);
+    }
+    std::cout<<std::endl;
+}

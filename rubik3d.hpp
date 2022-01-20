@@ -63,7 +63,7 @@ protected:
         }
     
     }
-
+    void append_umapf_path();
     void random_to_balanced();
     void random_to_balanced_fast();
     
