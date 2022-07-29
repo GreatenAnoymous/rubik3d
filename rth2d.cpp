@@ -19,6 +19,7 @@
 ///////////////////////////////RTH2D fat column //////////////////
 
 RTH_2d::RTH_2d(Robots &_r,Grids3d *_graph):robots(_r),graph(_graph){
+    // printf("graph size=(%d,%d)\n",graph->xmax,graph->ymax);
     assert(robots.size()<=graph->xmax*graph->ymax/3);
 }
 
@@ -52,6 +53,7 @@ void RTH_2d::prepare(){
 void RTH_2d::matching(){
     std::unordered_map<int,Robots> column_dict;
     int zs;
+    // std::cout<<"debug 2d robots size="<<robots.size()<<std::endl;
     for(auto &r:robots){
 
         int ci=r->current->y;
@@ -59,19 +61,28 @@ void RTH_2d::matching(){
         zs=r->current->z;
     }
 
+    // for(auto [ci,agents]:column_dict){
+    //     std::cout<<"debug column "<<ci<<" has "<<agents.size()<<" robots"<<std::endl;
+    // }
+
 
     for(int i=0;i<graph->xmax/3;i++){
         // std::cout<<"the "<<i<<"-th matching"<<std::endl;
         std::unordered_map<int,int>matching;
         std::unordered_map<point2d,Robot*,boost::hash<point2d>> arranged_robots;
         matching_helper(column_dict,matching,arranged_robots,3*i+1);
-        for(int color=0;color<graph->ymax;color++){
-            int column=matching[color];
-            arranged_robots[{color,column}]->intermediate=
-                getV(3*i+1,color,zs);
+        for(auto &[cc,robot]:arranged_robots){
+            // int column=matching[color];
+            int color=cc.first;
+            robot->intermediate=getV(3*i+1,color,zs);
         }
+        // for(int color=0;color<graph->ymax;color++){
+        //     int column=matching[color];
+        //     arranged_robots[{color,column}]->intermediate=
+        //         getV(3*i+1,color,zs);
+        // }
     }
-    LBA_heuristic();
+    // LBA_heuristic();
 }
 
 /**
@@ -86,20 +97,26 @@ void RTH_2d::matching_helper(std::unordered_map<int,Robots> &column_dict,
         std::unordered_map<int,int> &matching,
         std::unordered_map<point2d,Robot*,boost::hash<point2d>> &arranged_agents,
         int row){
-    using weighted_edge=std::tuple<int,int,double>;
+      using weighted_edge=std::tuple<int,int,double>;
     std::vector<weighted_edge> costEdge;
     const int max_inf=1e6;
     std::vector<int> column_id;
     for(auto const &column_i:column_dict){
-        column_id.push_back(column_i.first);
-    }  
-    for(auto const &i: column_id){
-        for(auto const &j:column_id){
+        if(column_i.second.size()!=0)column_id.push_back(column_i.first);
+    }
+    std::sort(column_id.begin(),column_id.end());  
+    // for(auto id:column_id){
+    //     std::cout<<id<<std::endl;
+    // }
+    for(int i=0;i<column_id.size();i++){
+        for(int j=0;j<column_id.size();j++){
             bool found=false;
             int min_d=max_inf;
-            Robot* min_agent;
-            for(auto const &agent_i :column_dict[i]){
-                if(agent_i->inter_goal->y==j and abs(agent_i->current->x-row)<min_d){
+            int col=column_id[i];
+            int color=column_id[j];
+            Robot * min_agent;
+            for(auto const &agent_i :column_dict[col]){
+                if(agent_i->inter_goal->y==color &&abs(agent_i->current->x-row)<min_d){
                     found=true;
                     min_d=abs(agent_i->current->x-row);
                     min_agent=agent_i;
@@ -107,37 +124,50 @@ void RTH_2d::matching_helper(std::unordered_map<int,Robots> &column_dict,
             }
             if(found){
                 costEdge.push_back({i,j,min_d});
-                arranged_agents[{i,j}]=min_agent;
+                // (cost_matrix.back()).push_back(min_d);
+                arranged_agents[{col,color}]=min_agent;
+                // assert(min_agent->current.y==i);
             }
             else{
                 //(cost_matrix.back()).push_back(max_inf);
             }
         }
     }
-    // for(auto &e:costEdge){
-    //     std::cout<<std::get<0>(e)<<" "<<std::get<1>(e)<<" "<<std::get<2>(e)<<std::endl;
-    // }
-    // std::cout<<costEdge.size()<<std::endl;
+    
+ 
     std::vector<int> assignment;
+    // double cost=labp_solve(cost_matrix,assignment);
+    // for(auto &ce:costEdge){
+    //     std::cout<<std::get<0>(ce)<<" "<<std::get<1>(ce)<<" "<<std::get<2>(ce)<<std::endl;
+    // }
+    // std::cout<<"edge size="<<costEdge.size()<<std::endl;
     double cost=lba_sparse(costEdge,assignment);
-    for(auto c:column_id){
-        int color=assignment[c];
-        Robot* agent=arranged_agents[{c,color}];
-        auto it = std::find(column_dict[c].begin(), column_dict[c].end(), agent);
-        if(it!=column_dict[c].end()){
-            column_dict[c].erase(it);  
+    // assert(assignment.size()==column_id.size());
+    for(int c=0;c<column_id.size();c++){
+        int col=column_id[c];
+        int color_id=assignment[c];
+        int color=column_id[color_id];
+        Robot* agent=arranged_agents[{col,color}];
+    
+        auto it = std::find(column_dict[col].begin(), column_dict[col].end(), agent);
+        if(it!=column_dict[col].end()){
+            column_dict[col].erase(it);
+            
         }else{
             throw std::runtime_error("NOT found the agent!");
         }
     }
-    for(auto c:column_id){
-        matching.insert({c,assignment[c]});
-    }        
+    for(int c=0;c<column_id.size();c++){
+        int col_id=column_id[c];
+        int color_id=assignment[c];
+        int color=column_id[color_id];
+        matching.insert({col_id,color});
+    }
 }
 
 
 void RTH_2d::LBA_heuristic(){
- 
+    
     std::unordered_map<int,Robots> row_dict;
    
     for(auto &agent:robots){

@@ -30,6 +30,7 @@ private:
     Grids3d* graph;
     Paths3d result;
     void find_initial_paths(Paths3d & paths);
+  
     void update_paths(Paths3d &paths);
     void schedule(Paths3d &);
     void formDAG(const Paths3d &,DAG &dag_graph);

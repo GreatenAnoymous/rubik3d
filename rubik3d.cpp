@@ -27,6 +27,8 @@ RTH_3d::RTH_3d(Robots & _r,Grids3d *_g):robots(_r),graph(_g){
 
 void RTH_3d ::solve(){
     // prepare();
+    std::cout<<"num of agents="<<robots.size()<<std::endl;
+    std::cout<<graph->xmax<<" "<<graph->ymax<<" "<<graph->zmax<<std::endl;
     random_to_balanced_fast();
     //first do fat column (xz-plane) matching 
     lba_matching_fat();
@@ -91,19 +93,34 @@ void RTH_3d::lba_matching_fat(){
         std::unordered_map<int,int>matching;
         std::unordered_map<point2d,Robot*,boost::hash<point2d>> arranged_robots;
         matching_helper(fat_column_dict,matching,arranged_robots,i);
+        // for(auto [key,col]:matching){
+        //     std::cout<<key<<" "<<col<<std::endl;
+        // }
         for(int xi=1;xi<graph->xmax;xi+=cell_size){
             for(int yi=0;yi<graph->ymax;yi++){
                 int key=get_plane_id(xi,yi);
                 int column=matching[key];
-                int xt,yt;
+                // int xt,yt;
                 // get_xy(column,xt,yt);
+                // printf("ID=%d ,x,y=%d,%d\n",column,xt,yt);
+                // printf("key=%d\n",key);
+                // printf("(key,column)=(%d,%d)\n",key,column);
+                // assert(arranged_robots.find({key,column})!=arranged_robots.end());
                 arranged_robots[{key,column}]->intermediate=
                     graph->getVertex(xi,yi,i);
                 // std::cout<<"robot "<<arranged_robots[{key,column}]->id<<" aranged in ("<<xt<<","<<yt<<","<<i<<")\n"; 
             }
         }
     }
-    // LBA_heuristic();
+     
+    LBA_heuristic();
+    //    for (auto &robot : robots)
+    //     {
+    //         assert(robot->intermediate != nullptr);
+    //         assert(robot->intermediate->x == robot->current->x);
+    //         assert(robot->intermediate->y == robot->current->y);
+    //         // std::cout<<robot->intermediate->print()<<"================"<<std::endl;
+    //     }
 }
 
 /**
@@ -257,7 +274,8 @@ void RTH_3d::LBA_heuristic(){
     // std::cout<<"solved"<<std::endl;
     for(int i=0;i<rows.size();i++){
         for(auto&agent: row_dict[rows[i]]){
-            agent->intermediate=graph->getVertex(rows[assignment[i]],agent->intermediate->y,agent->intermediate->z);
+             agent->intermediate=graph->getVertex(agent->intermediate->x,agent->intermediate->y,rows[assignment[i]]);
+            // agent->intermediate=graph->getVertex(rows[assignment[i]],agent->intermediate->y,agent->intermediate->z);
         //    std::cout<< agent->intermediate->print()<<std::endl;
         }
     }
@@ -337,6 +355,7 @@ void RTH_3d::random_to_balanced_fast(){
     th2.join();
     format_paths(paths_s);
     format_paths(paths_g);
+
     // print_one_path(paths_s[0]);
     // print_one_path(paths_g[0]);
     // printf("(%d,%d,%d)\n",starts[0]->x,starts[0]->y,starts[0]->z);

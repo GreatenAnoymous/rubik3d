@@ -49,3 +49,77 @@ Path3d BFS_solver::solve(){
     std::reverse(result.begin(),result.end());
     return result;  
 }
+
+//////////////////////////////
+
+AStarSolver::AStarSolver(Location3d*start,Location3d*goal){
+    this->start=start;
+    this->goal=goal;
+}
+
+Path3d AStarSolver::search(){
+    openList open(compareOpen);
+    std::unordered_set<std::string> closed;
+    int f0,g0,fLB=0;
+    f0=start->manhattan_dist(goal);
+    AStarNode_p start_node=std::make_shared<AStarNode>(start,f0,0,0,nullptr);
+    open.push(start_node);
+    bool success=false;
+    AStarNode_p goalNode;
+    while(open.empty()==false){
+        auto best=open.top();
+        open.pop();
+        if(isSolution(best)){
+            success=true;
+            goalNode=best;
+            break;
+        }
+
+        
+        if(closed.find(best->toString())!=closed.end()) continue;
+        closed.insert(best->toString());
+ 
+        auto neighbors=getNeighbors(best);
+        // auto neighbors=best->v->neighbor;
+        for(auto &n :neighbors){
+            // std::cout<<"child "<<n->toString()<<" ";
+            
+            if(closed.find(n->toString())!=closed.end()) continue;           // not closed
+ 
+            open.push(n);                                            //push to the open
+        }
+    }
+    if(success==false){
+
+        return {};              //fail to find a solution
+    }
+    else{
+        //extract the path
+        // std::cout<<"found! number of expansions="<<numberOfExpansions<<std::endl;
+        AStarNode_p current=goalNode;
+        Path3d result;
+        while(true){
+            // current->v->println();
+            result.push_back(current->v);
+            if(current==start_node) break;
+            current=current->parent;
+        }
+        std::reverse(result.begin(),result.end());
+        //shrink
+        return result;
+     
+    }
+}
+
+void AStarSolver::standard_init(){
+    compareOpen=[&](AStarNode_p a1, AStarNode_p a2)->bool{
+        if(a1->f!=a2->f) return a1->f> a2->f;
+        // if(a1->t!=a2->t) return a1->t< a2->t;
+        return false;
+    };
+    isSolution=[&](AStarNode_p n)->bool{
+        // std::cout<<"max_constraint_time= "<<max_constraint_time<<std::endl;
+        return n->v==this->goal;
+    };
+    // std::cout<<"function init complete!"<<std::endl;
+}

@@ -29,7 +29,7 @@ FormationControl::FormationControl(Robots &robots,Grids3d *graph){
         // printf("start(%d,%d,%d)-->goal(%d,%d,%d)\n",r->start->x,r->start->y,r->start->z,
             // r->goal->x,r->goal->y,r->goal->z);
     }
-    // printf("debug   ");
+
     this->graph=graph;
 }
 
@@ -51,20 +51,35 @@ void FormationControl::find_initial_paths(Paths3d & paths){
     int threshold=7;        //if there is a lap algorithm for sparse matrix, that would be great
     bool feasible=false;
     // costMatrix costs(m,std::vector<double>(m,BIG));
+    auto diff=[](Location3d *s,Location3d *g){
+        if(s==g) return 0;
+        if(s->x==g->x and (s->x-1)%3==0) return s->manhattan_dist(g)+2;
+        if(s->y==g->y and (s->y-1)%3==0) return s->manhattan_dist(g)+2;
+        return s->manhattan_dist(g);
+    };
     costEdges costs;
     for(int i=0;i<m;i++){
         for(int j=0;j<m;j++){
+           
+
             double dist=starts[i]->manhattan_dist(goals[j]);
-            if(dist<threshold) costs.push_back({i,j,dist});
+            if(dist<threshold) {
+                // BFS_solver solver(starts[i]);
+                // solver.isGoal=[&](Location3d *v){
+                //     return v==goals[j];
+                // };
+                // solver.getNeighbors=[&](Location3d*v){
+                //     return graph->getNeighbors(v);
+                // };
+                // auto pi=solver.solve();
+                // std::cout<<dist<<"  "<<pi.size()<<std::endl;
+                dist=diff(starts[i],goals[j]);
+               
+                costs.push_back({i,j,dist}); 
+            }
         }
     }
-    // for(int i=0;i<m;i++){
-    //     std::cout<<i<<":";
-    //     for(auto const &[j,cj]:costs[i]){
-    //         std::cout<<"("<<j<<","<<cj<<") ";
-    //     }
-    //     std::cout<<std::endl;
-    // }
+   
 
     
   
@@ -152,7 +167,13 @@ void FormationControl::update_paths(Paths3d &old_paths){
             return startSet.find(v)!=startSet.end();
         };
         Path3d pi=searcher.solve();
-
+        if(pi.size()==0){
+            std::cout<<standAloneGoal->print()<<" bug happend"<<std::endl;
+        }
+        else{
+            auto si=pi.back();
+            // std::cout<<si->print()<<" "<<standAloneGoal->print()<<std::endl;
+        }
         
         auto si=pi.back();
         startSet.erase(si);

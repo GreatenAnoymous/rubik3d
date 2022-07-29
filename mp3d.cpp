@@ -121,7 +121,13 @@ void Motion3d::reconfigure_y(){
  * 
  */
 void Motion3d::reconfigure_z(){
+
     if(robots.empty()) return;
+    // for(auto &robot:robots){
+    //     std::cout<<robot->current->print()<<"---->"<<robot->intermediate->print()<<std::endl;
+    // }
+    // printf("(%d,%d),(%d,%d),(%d,%d),|r|=%d\n",xmin,xmax,ymin,ymax,zmin,zmax,(int)robots.size());
+    // std::cout<<"debug dimension "<<xmax<<" "<<ymax<<" "<<zmax<<" |r|="<<robots.size()<<std::endl;
     prepare();
     
     fill_paths(robots);
@@ -129,6 +135,9 @@ void Motion3d::reconfigure_z(){
     for(auto &r:robots){
         int xs,ys,zs,xg,yg,zg;
         std::tie(xs,ys,zs)=std::make_tuple(r->current->x,r->current->y,r->current->z);
+        assert(r->inter2!=nullptr);
+    
+        
         std::tie(xg,yg,zg)=std::make_tuple(r->inter2->x,r->inter2->y,r->inter2->z);
         // printf("(%d,%d,%d)--->(%d,%d,%d)\n",xs,ys,zs,xg,yg,zg);
         if(zg>zs){
@@ -260,7 +269,7 @@ void Motion3d::prepare_helper(int min_x,int min_y,int min_z){
 
         find_robots(vertices,robots1,robots2);
     }
-
+    // std::cout<<" robots1 size="<<robots1.size()<<" robots2 size="<<robots2.size()<<std::endl;
     if(robots1.size()!=0){
         auto start_id=get_json_key(robots1,'s');
       
@@ -277,7 +286,7 @@ void Motion3d::prepare_helper(int min_x,int min_y,int min_z){
         }
     }
     if(robots2.size()!=0){
-      
+        
         auto start_id=get_json_key(robots2,'g');
         // std::cout<<start_id<<std::endl;
         std::vector<std::vector<int>> solution = data2d[start_id];

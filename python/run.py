@@ -56,7 +56,7 @@ def call_rth3d(scen_name,output_name):
 
 
 def call_rth3dlba(scen_name,output_name):
-    cmd=['./rthlba',scen_name,output_name]
+    cmd=['./rth3dlba',scen_name,output_name]
     output=check_output(cmd,stderr=STDOUT,timeout=300).decode('utf-8')
 
 def run_already():
@@ -128,8 +128,220 @@ def run_random_flat_ecbs3d():
             except:
                 pass
                 
+def run_random_rec_rthlba():
+    ss=[3,6,9,12,15,18,21,24,27,30,33,36]
+    #ss=[24,27,30,33,36]
+    for m in ss:
+        for k in range(20):
+            scen_name="./instances/quasi_random_rec/"+str(m)+'_rec_'+str(k)+'.scen'
+            out_name='./data/random_rec/rth3dlba/'+str(m)+'_rec_'+str(k)+'.txt'
+            print(scen_name)
+            try:
+                call_rth3dlba(scen_name,out_name)
+            except:
+                pass
+
+def run_random_rec_rth():
+    ss=[3,6,9,12,15,18,21,24,27,30,33,36]
+    #ss=[24,27,30,33,36]
+    for m in ss:
+        for k in range(20):
+            scen_name="./instances/quasi_random_rec/"+str(m)+'_rec_'+str(k)+'.scen'
+            out_name='./data/random_rec/rth3d/'+str(m)+'_rec_'+str(k)+'.txt'
+            print(scen_name)
+            try:
+                call_rth3d(scen_name,out_name)
+            except:
+                
+                pass                
             
-run_random_flat_rth3d()
-run_random3d()
+def run_random_rec_ecbs():
+    ss=[3,6,9]
+    #ss=[3,6,9,12,15,18,21]
+    for m in ss:
+        for k in range(20):
+            scen_name="./instances/quasi_random_rec/"+str(m)+'_rec_'+str(k)+'.scen'
+            out_name='./data/random_rec/ecbs3d/'+str(m)+'_rec_'+str(k)+'.txt'
+            print(scen_name)
+            try:
+                call_ecbs(scen_name,out_name)
+            except:
+                pass
+                
+def run_density_rth():
+    num_agents=[4800,6000,7200,8400,9600,10800,12000,13200,14400]
+    for num in num_agents:
+        for k in range(20):
+            scen_name="./instances/density/"+str(num)+"_"+str(k)+'.scen'
+            out_name='./data/density/rth3d/'+str(num)+"_"+str(k)+'.txt'
+            print(scen_name)
+            try:
+                cmd=['./rthdensity',scen_name,out_name]
+                output=check_output(cmd,stderr=STDOUT,timeout=300).decode('utf-8')
+            except:
+                raise error()
+                pass
+
+def run_density_rthLBA():
+    num_agents=[4800,6000,7200,8400,9600,10800,12000,13200,14400]
+    for num in num_agents:
+        for k in range(20):
+            scen_name="./instances/density/"+str(num)+"_"+str(k)+'.scen'
+            out_name='./data/density/rth3dlba/'+str(num)+"_"+str(k)+'.txt'
+            print(scen_name)
+            try:
+                cmd=['./rthdensityLBA',scen_name,out_name]
+                output=check_output(cmd,stderr=STDOUT,timeout=300).decode('utf-8') 
+            except:
+                pass
+                
+                
+def run_ring_rthlba():
+    ss=[3,6,9,12,15,18,21,24,27,30,33,36]
+    for m in ss:
+       
+        scen_name="./instances/rings/"+str(m)+'.scen'
+        out_name='./data/rings/rth3dlba/'+str(m)+'.txt'
+        print(scen_name)
+        try:
+            call_rth3dlba(scen_name,out_name)
+        except:
+            pass
+            
+def run_ring_rth():
+    ss=[3,6,9,12,15,18,21,24,27,30,33,36]
+    for m in ss:
+       
+        scen_name="./instances/rings/"+str(m)+'.scen'
+        out_name='./data/rings/rth3d/'+str(m)+'.txt'
+        print(scen_name)
+        try:
+            call_rth3d(scen_name,out_name)
+        except:
+            pass
+
+def run_blocks_rth():
+    ss=[3,6,9,12,15,18,21,24,27,30,33,36]
+    d=3
+    for m in ss:
+        for k in range(20):
+            scen_name="./instances/blocks/"+str(m)+'_'+str(k)+'.scen'
+            print(scen_name)
+            out_name='./data/blocks/rth3d/'+str(m)+' '+str(k)+'.txt'
+            try:
+                call_rth3d(scen_name,out_name)
+            except:
+                pass
+            
+def run_blocks_rthlba():
+    ss=[3,6,9,12,15,18,21,24,27,30,33,36]
+    d=3
+    for m in ss:
+        for k in range(20):
+            
+            scen_name="./instances/blocks/"+str(m)+'_'+str(k)+'.scen'
+            print(scen_name)
+            out_name='./data/blocks/rth3dlba/'+str(m)+'_'+str(k)+'.txt'
+            try:
+                call_rth3dlba(scen_name,out_name)
+            except:
+                pass  
+
+def run_obs_rth():
+    ss=[3,6,9,12,15,18,21,24,27,30,33,36]
+    for m in ss:
+        for k in range(20):
+            scen_name="./instances/quasi_obs_rec/"+str(m)+'_rec_'+str(k)+'.scen'
+            print(scen_name)
+            out_name='./data/obs_rec/rth3d/'+str(m)+'_rec_'+str(k)+'.txt'
+            try:
+                cmd=['./rth3d_obs',scen_name,out_name]
+                output=check_output(cmd,stderr=STDOUT,timeout=300).decode('utf-8')
+            except:
+                pass
+
+def run_obs_rthlba():
+    ss=[3,6,9,12,15,18,21,24,27,30,33,36]
+    for m in ss:
+        for k in range(20):
+            scen_name="./instances/quasi_obs_rec/"+str(m)+'_rec_'+str(k)+'.scen'
+            print(scen_name)
+            out_name='./data/obs_rec/rth3dlba/'+str(m)+'_rec_'+str(k)+'.txt'
+            #try:
+            cmd=['./rth3d_obs_lba',scen_name,out_name]
+            output=check_output(cmd,stderr=STDOUT,timeout=300).decode('utf-8')
+            #except:
+                #pass
+
+def run_obs_ecbs():
+    ss=[3,6,9]
+    for m in ss:
+        for k in range(20):
+            scen_name="./instances/quasi_obs_rec/"+str(m)+'_rec_'+str(k)+'.scen'
+            print(scen_name)
+            out_name='./data/obs_rec/ecbs3d/'+str(m)+'_rec_'+str(k)+'.txt'
+            
+            cmd=['./ecbs3d_obs','-s',scen_name,'-o',out_name,'-w','1.5']
+            output=check_output(cmd,stderr=STDOUT,timeout=300).decode('utf-8')
+            
+def run_ilp_random_rec():
+    ss=[3,6,9]
+    #ss=[3,6,9,12,15,18,21]
+    for m in ss:
+        for k in range(20):
+            scen_name="./instances/quasi_random_rec/"+str(m)+'_rec_'+str(k)+'.scen'
+            out_name='./data/random_rec/ilp16/'+str(m)+'_rec_'+str(k)+'.txt'
+            print(scen_name)
+            try:
+                cmd=['./ilp16',scen_name,out_name]
+                output=check_output(cmd,stderr=STDOUT,timeout=300).decode('utf-8')
+            except:
+                pass
+                
+def run_obs_ilp():
+    ss=[3,6,9]
+    for m in ss:
+        for k in range(20):
+            scen_name="./instances/quasi_obs_rec/"+str(m)+'_rec_'+str(k)+'.scen'
+            print(scen_name)
+            try:
+                out_name='./data/obs_rec/ilp16/'+str(m)+'_rec_'+str(k)+'.txt'
+                
+                cmd=['./ilp16',scen_name,out_name]
+                output=check_output(cmd,stderr=STDOUT,timeout=300).decode('utf-8')
+            except:
+                pass
+            
+def run_random_flat_ilp():
+    ss=[6,9,15,30]
+    for s in ss:
+        for k in range(20):
+            scen_name="./instances/quasi_random_flatK6/"+str(s)+'x'+str(s)+'_'+str(k)+'.scen'
+            out_name='./data/random_flatK6/ilp16/'+str(s)+'x'+str(s)+'_'+str(k)+'.txt'
+            print(scen_name)
+            try:
+                cmd=['./ilp16',scen_name,out_name]
+                output=check_output(cmd,stderr=STDOUT,timeout=300).decode('utf-8')
+            except:
+                pass
+            
+#run_random_flat_rth3d()
+#run_random3d()
 #run_random_flat_ecbs3d()
 #run_already2()
+#run_density_rth()
+#run_density_rthLBA()
+#run_random_rec_rth()
+#run_random_rec_rthlba()
+#run_random_rec_ecbs()
+#run_ring_rthlba()
+#run_ring_rth()
+#run_blocks_rth()
+#run_blocks_rthlba()
+
+#run_obs_rthlba()
+#run_obs_ecbs()
+#run_obs_rth()
+#run_obs_ilp()
+run_ilp_random_rec()
+#run_random_flat_ilp()

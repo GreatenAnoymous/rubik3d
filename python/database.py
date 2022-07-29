@@ -1,5 +1,6 @@
 import json
-import ilp
+from tracemalloc import start
+
 import problem_generator as pg
 from itertools import permutations 
 from itertools import combinations
@@ -8,6 +9,7 @@ from LBA import *
 from subprocess import STDOUT, check_output
 
 graph=pg.generate_full_graph(2,3)
+
 # encoding of  figure 8 vertex
 def get_id(vertex):
     return vertex[0]+vertex[1]*3
@@ -41,15 +43,18 @@ def solve_instance_uniform_obs(start_id,goal_id):
     output=ilp.solve(instance)
     return output
 
-def sovle_instance_cbs(start_id,goal_id):
+def sovle_instance_ilp(start_id,goal_id):
     vertex_id_map={0:(0,0),1:(1,0),2:(2,0),3:(0,1),4:(1,1),5:(2,1),6:(0,2),7:(1,2),8:(2,2)}
     # graph=pg.generate_graph(3,3,[(1,1)])
     graph=pg.generate_graph(3,3,[])
+    if len(start_id)==2:        #obstacles
+        graph=pg.generate_graph(3,3,[(1,1)])
+        print("obstacles!")
     starts=[vertex_id_map[id] for id in start_id]
     goals=[vertex_id_map[id] for id in goal_id]
     pg.write_graph(graph,'./tmp/tmp.map')
     pg.write_instance(graph,starts,goals,'./tmp/tmp.map','./tmp/tmp.instance')
-    cmd=['./bin/ecbs','./tmp/tmp.map','./tmp/tmp.instance','1']
+    cmd=['./ecbs','./tmp/tmp.map','./tmp/tmp.instance']
     output=check_output(cmd,stderr=STDOUT,timeout=300).decode('utf-8')
     output_dict=json.loads(output)
     solution=output_dict['solution']
@@ -125,7 +130,7 @@ def generate_local3x3_uniform():
             print(goal_id)
             # start_id,goal_id=task_assign(start_id,goal_id)
             # output=solve_instance_uniform_obs(start_id,goal_id)
-            output=sovle_instance_cbs(start_id,goal_id)
+            output=sovle_instance_ilp(start_id,goal_id)
             paths=[]
             key1=str((start_id,'y'))
            
@@ -144,7 +149,7 @@ def generate_local3x3_uniform():
         for goal_id in goal_comb:
             start_id,goal_id=task_assign(start_id,goal_id)
             # output=solve_instance_uniform_obs(start_id,goal_id)
-            output=sovle_instance_cbs(start_id,goal_id)
+            output=sovle_instance_ilp(start_id,goal_id)
             if set(goal_id)==set([1,7]):
                 key=str((start_id,'y'))
                 print("y")
@@ -164,7 +169,7 @@ def generate_local3x3_uniform():
             start_id,goal_id=task_assign(start_id,goal_id)
          
             # output=solve_instance_uniform_obs(start_id,goal_id)
-            output=sovle_instance_cbs(start_id,goal_id)
+            output=sovle_instance_ilp(start_id,goal_id)
             if set(goal_id)==set([1,4,7]):
                 key=str((start_id,'y'))
                 print('y')

@@ -13,8 +13,6 @@
 #include <queue>
 
 
-
-
 /**
  * @brief A star
  * 
@@ -31,10 +29,14 @@ public:
         int f;
         int hc; //number of conflicts; used for tie-breaking
         AStarNode_p parent;
+        std::string toString(){
+            return std::to_string(v->id)+"_"+std::to_string(t);
+        }
     };
 
-    using AStarNodes=std::vector<AStarNode>;
     using AStarNode_p=std::shared_ptr<AStarNode>;
+
+    using AStarNodes=std::vector<AStarNode_p>;
     AStarSolver(Location3d *start,Location3d *goal);
     Path3d search();
     std::function<bool(AStarNode_p)> checkValid;
@@ -44,8 +46,11 @@ public:
     std::function<int(AStarNode_p)> computeHeuristic;
     std::function<bool(AStarNode_p,AStarNode_p)> compareOpen;
     using openList=std::priority_queue<AStarNode_p,AStarNodes,decltype(compareOpen)>;
+
+    void standard_init();
+  
 private:
-    Location3d* start,goal;
+    Location3d* start,*goal;
 };
 
 

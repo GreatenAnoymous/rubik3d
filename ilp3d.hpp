@@ -24,6 +24,8 @@ public :
     void solve_original();
     void solve_split(Configs s,Configs g,int split,Paths3d &result);
     Paths3d get_result();
+    void save_result(std::string file_name,double comp_time);
+    int makespan;
 
 protected:
     Configs starts,goals;
@@ -46,5 +48,10 @@ protected:
     std::vector<std::vector<size_t>> individual_paths = std::vector<std::vector<size_t>>();
     Paths3d final_paths;
 
+    
 };
+
+void ilp_solve_split(Configs &starts,Configs &goals,Grids3d *graph,int split,int &makespan);
+void get_middle_configs(Configs &starts,Configs &goals, Grids3d *graph,Configs &mid);
+void save_makespan_and_time(std::string file_name,int makespan,int makespanLB,double runtime);
 #endif

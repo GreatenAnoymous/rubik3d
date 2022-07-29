@@ -28,11 +28,14 @@ void Ilp3D::solve_original()
     while (true)
     {
         GRBModel model = prepare_model(timeStep);
+        std::cout<<"model prepared! timestep="<<timeStep<<std::endl;
         model.optimize();
         double obj_val = model.get(GRB_DoubleAttr_ObjVal);
+        std::cout<<"obj_val="<<obj_val<<std::endl;
         if (obj_val == numAgemts)
         {
-            retrive_paths(model, timeStep);
+            // retrive_paths(model, timeStep);
+            makespan=timeStep;
             return;
         }
         timeStep += 1;
@@ -155,22 +158,24 @@ GRBModel Ilp3D::prepare_model(int timeStep)
 
 void Ilp3D::retrive_paths(GRBModel & model, int time_steps){
     auto vars = model.getVars();
-    int numAgents=starts.size()
-;    final_paths = Paths3d(numAgents, Path3d(time_steps + 1, nullptr));
+    int numAgents=starts.size();
+    final_paths = Paths3d(numAgents, Path3d(time_steps + 1, nullptr));
     for (size_t r = 0; r <numAgents; r++)
     {
         final_paths[r][0] = starts[r];
         for (size_t t = 1; t < time_steps + 1; t++)
         {
             Location3d* v1 = final_paths[r][t - 1];
+            // assert(v1!=nullptr);
             std::vector<Location3d*> nbrs = graph->getNeighbors(v1);
             nbrs.push_back(v1);
             for (size_t i = 0; i < nbrs.size(); i++)
             {
                 try
                 {
-                    if (model.getVarByName(get_id(r, v1, nbrs[i], t - 1)).get(GRB_DoubleAttr_X) == 1.0)
+                    if (model.getVarByName(get_id(r, v1, nbrs[i], t - 1)).get(GRB_DoubleAttr_X) > 1.0)
                     {
+                        // assert(nbrs[i]!=nullptr);
                         final_paths[r][t] = nbrs[i];
                         break;
                     }
@@ -180,6 +185,14 @@ void Ilp3D::retrive_paths(GRBModel & model, int time_steps){
                     continue;
                 }
             }
+            // if(final_paths[r][t]==nullptr) {
+            //     for(size_t i = 0; i < nbrs.size(); i++){
+            //         std::cout<<"var value="<<model.getVarByName(get_id(r, v1, nbrs[i], t - 1)).get(GRB_DoubleAttr_X)<<std::endl;
+            //     }
+                
+            // }
+            // printf("%d %d\n",r,t);
+            // assert(final_paths[r][t]!=nullptr);
         }
     }
 }
@@ -233,67 +246,142 @@ inline void Ilp3D::store_var_for_edges(GRBVar &var, Location3d* v1, Location3d* 
     edge_time_vector_map.find(id)->second.push_back(var);
 }
 
-
-void Ilp3D::solve_split(Configs s,Configs g,int split,Paths3d &result)
-{
-    int num_robots=s.size();
-
-    if(split==0){
-        Ilp3D solver(s,g,graph);
-        solver.solve_original();
-        result=solver.final_paths;
-        return;    
-    }
-    //cout << "Called" << endl;
+void get_middle_configs(Configs &starts,Configs &goals, Grids3d *graph,Configs &middle_config){
+    int num_robots=starts.size();
+     //cout << "Called" << endl;
     Paths3d individual_paths;
     std::vector<std::pair<size_t, size_t>> path_lengths = std::vector<std::pair<size_t, size_t>>();
     size_t max_length = 0;
     for (size_t i = 0; i < num_robots; i++)
     {
-        AStarSolver solver(s[i],g[i]);
+        AStarSolver solver(starts[i],goals[i]);
+        solver.standard_init();
+        solver.getNeighbors=[&](AStarSolver::AStarNode_p n){
+            AStarSolver::AStarNodes successors;
+            auto cs=graph->getNeighbors(n->v);
+            cs.push_back(n->v);
+            for(auto &vn:cs){
+                int tn=n->t+1;                                      // tn
+                int fn=n->v->manhattan_dist(goals[i])+tn;                           //fn=gn+hn     
+                AStarSolver::AStarNode_p new_node=std::make_shared<AStarSolver::AStarNode>(vn,fn,tn,0,n);
+                successors.push_back(new_node);
+            }
+            return successors;
+        };
         auto pi=solver.search();
 
         path_lengths.push_back(std::make_pair(i, pi.size()));
         individual_paths.push_back(pi);
     }
     std::sort(path_lengths.begin(), path_lengths.end(), [](auto &left, auto &right) { return left.second > right.second; });
-    std::vector<Location3d*> middle_config(num_robots, nullptr);
+    middle_config.resize(num_robots,nullptr);
     for(auto &var: path_lengths)
     {
         size_t i = var.first;
+        // std::cout<<"the "<<i<<" th path"<<var.second<<std::endl;
         auto desired_pt = individual_paths[i][individual_paths[i].size() / 2];
+        // std::cout<<"desired point is "<<desired_pt->print()<<std::endl;
+        // std::cout<<"The path is ";
+        // for(auto &v :individual_paths[i]){
+        //     std::cout<<v->print()<<" ";
+
+        // }
+        std::cout<<std::endl;
         std::vector<Location3d*> pool;
         auto it = find(middle_config.begin(), middle_config.end(), desired_pt);
         while (it != middle_config.end())
         {
-            pool.insert(pool.end(), graph->getNeighbors(desired_pt).begin(), graph->getNeighbors(desired_pt).end());
+            // if(i==2){
+            //     auto nbr=graph->getNeighbors(desired_pt);
+            //     // std::cout<<"debug nbr=";
+            //     for(auto &v :nbr){
+            //         std::cout<<v->print()<<" ";
+            //     }
+            //     std::cout<<std::endl;
+            //     std::cout<<pool.size()<<std::endl;
+            // }
+            auto nbr=graph->getNeighbors(desired_pt);
+            
+            pool.insert(pool.end(), nbr.begin(), nbr.end());
+            // std::cout<<"insert pool succeed!"<<std::endl;
             desired_pt = pool[0];
             pool.erase(pool.begin());
             it = find(middle_config.begin(), middle_config.end(), desired_pt);
         }
+     
         middle_config[i] = desired_pt;
     }
-    //for each (auto var in middle_config)
-    //	cout << var << " ";
-    //cout << endl;
+}
+
+
+void ilp_solve_split(Configs &starts,Configs &goals,Grids3d *graph,int split,int &makespan)
+{
+    int num_robots=starts.size();
+    int mpieces=pow(2,split);
+    std::vector<Configs> msg(mpieces+1,Configs(num_robots));
+    for(int i=0;i<num_robots;i++){
+        msg[0][i]=starts[i];
+        msg[mpieces][i]=goals[i];
+    }
+    for(int i = 0; i < split; i ++){
+        int numSplits = pow(2, i);
+        int stepSize = pow(2, split - i);
+        for(int s = 0; s < numSplits; s++){
+            //System.out.println("OK");
+            Configs middle;
+            get_middle_configs(msg[s*stepSize],msg[(s+1)*stepSize],graph,middle);
+            // int[] middle = splitPaths(g, msg[s*stepSize], msg[(s+1)*stepSize], false);
+            
+            for(int a = 0; a < starts.size(); a ++){
+                msg[s*stepSize + stepSize/2][a] = middle[a];
+            }
+        }
+    }
+
+    auto solve_ilp=[](Configs &ss,Configs &gg,Grids3d *graph,int *makespan_){
+        Ilp3D solver(ss,gg,graph);
+        solver.solve_original();
+        *makespan_=solver.makespan;
+    };
+
+    int *mk=new int[mpieces];
+    for(int i=0;i<mpieces;i++){
+        std::thread t(solve_ilp,std::ref(msg[i]),std::ref(msg[i+1]),graph,mk+i);
+        t.join();
+    }
+    makespan=0;
+    for(int i=0;i<mpieces;i++){
+        makespan+=mk[i]-1;
+    }
+    makespan++;
+    delete[] mk;
   
-    Ilp3D solver_1(s,middle_config,graph);
-    Ilp3D solver_2(middle_config,g,graph);
-    Paths3d p1,p2;
-    if (split <= 4)
-    {
-        std::thread t1(&Ilp3D::solve_split, this,s,middle_config,split-1,std::ref(p1));
-        std::thread t2(&Ilp3D::solve_split, this,middle_config,g,split-1,std::ref(p2));
-        t1.join();
-        t2.join();
-    }
-    else
-    {
-        solver_1.solve_split(s,middle_config,split-1,p1);
-        solver_2.solve_split(middle_config,g,split-1,p2);
-    }
-    //cout << "Combine paths" << endl;
-    result = p1;
-    result.pop_back();
-    result.insert(result.end(), p2.begin(), p2.end());
+
+    // if (split <= 4)
+    // {
+    //     std::thread t1(&Ilp3D::solve_split, this,s,middle_config,split-1,std::ref(p1));
+    //     std::thread t2(&Ilp3D::solve_split, this,middle_config,g,split-1,std::ref(p2));
+    //     t1.join();
+    //     t2.join();
+    // }
+    // else
+    // {
+    //     solver_1.solve_split(s,middle_config,split-1,p1);
+    //     solver_2.solve_split(middle_config,g,split-1,p2);
+    // }
+    // //cout << "Combine paths" << endl;
+    // result = p1;
+    // result.pop_back();
+    // result.insert(result.end(), p2.begin(), p2.end());
+}
+
+
+
+void save_makespan_and_time(std::string file_name,int makespan,int makespanLB,double runtime){
+    std::ofstream out(file_name);
+    // out<<"soc="<<soc<<std::endl;
+    // out<<"lb_soc="<<socLB<<std::endl;
+    out<<"makespan="<<makespan<<std::endl;
+    out<<"lb_makespan="<<makespanLB<<std::endl;
+    out<<"comp_time="<<(int)(runtime*1000)<<std::endl;
 }

@@ -1,3 +1,4 @@
+
 from typing import List, Tuple
 import numpy as np
 import json
@@ -37,6 +38,33 @@ def generate_quasi_random_instance(graph_size:Tuple,num_agents=-1):
     np.random.shuffle(starts)
     np.random.shuffle(goals)
     return starts,goals
+
+def generate_quasi_random_obstacles(graph_size,num_agents=-1):
+    xmax,ymax,zmax=graph_size
+    if num_agents==-1:
+        num_agents=int(xmax*ymax*zmax*2/9)
+    starts=[]
+    goals=[]
+    obstacles=set()
+    for z in range(0,zmax):
+        for x in range(1,xmax,3):
+            for y in range(1,ymax,3):
+                obstacles.add((x,y,z))
+    ########################################
+    for i in range(0,xmax,3):
+        for j in range(0,ymax,3):
+            for k in range(0,zmax,3):
+                tmp_starts=[(x,y,z) for x in range(i,i+3) for y in range(j,j+3) for z in range(k,k+3) if (x,y,z) not in obstacles]
+                tmp_goals=tmp_starts.copy()
+                np.random.shuffle(tmp_starts)
+                np.random.shuffle(tmp_goals)
+                starts.extend(tmp_starts[0:6])
+                goals.extend(tmp_goals[0:6])
+    np.random.shuffle(starts)
+    np.random.shuffle(goals)
+    return starts,goals
+
+
 
 def generate_test_rth2d(graph_size:Tuple,num_agents=-1):
     #fix z
@@ -126,7 +154,161 @@ def generate_flat_quasi_random():
             print(file_name)
             starts,goals=generate_quasi_random_instance((m,m,K))
             save_instance_as_txt(file_name,starts,goals,(m,m,K))
+            
+def generate_quasi_random_rec():
+    #ss=[3,6,9,12,15,18,21]
+    ss=[24,27,30,33,36]
+    for m in ss:
+        m2=4*m
+        m1=2*m
+        for k in range(20):
+            file_name="./instances/quasi_random_rec/"+str(m)+'_rec_'+str(k)+'.scen'
+            starts,goals=generate_quasi_random_instance((m1,m2,m))
+            save_instance_as_txt(file_name,starts,goals,(m1,m2,m))
+
+def generate_density_rec():
+    #using 120x60x6
+    num_agents=[4800,6000,7200,8400,9600,10800,12000,13200,14400]
+    for m in num_agents:
+        m2=120
+        m1=60
+        m3=6
+        for k in range(20):
+            file_name="./instances/density/"+str(m)+'_'+str(k)+".scen"
+            starts,goals=generate_random_instance((m1,m2,m3),m)
+            save_instance_as_txt(file_name,starts,goals,(m1,m2,m3))
+            
+            
+                    
+def generate_ring():
+    #2:2:1
+    ss=[3,6,9,12,15,18,21,24,27,30,33,36]
+    for m in ss:
+        starts=[]
+        goals=[]
+        m2=2*m
+        for zi in range(m):
+            for i in range(1,m2,3):
+                low_x=i
+                high_x=m2-1-i
+                low_y=i
+                high_y=m2-1-i
+                start_set=set()
+                start_set.update([(i,low_y,zi) for i in range(low_x,high_x+1)])
+                start_set.update([(i,high_y,zi) for i in range(low_x,high_x+1)])
+                start_set.update([(low_x,i,zi) for i in range(low_y,high_y+1)])
+                start_set.update([(high_x,i,zi) for i in range(low_y,high_y+1)])
                 
+                starts.extend(list(start_set))
+    
+        for start in starts:
+                
+            goal=(m2-1-start[0],m2-1-start[1],m-start[2]-1)
+           # print(goal,start,"@@")
+            goals.append(goal)
+           
+        print(len(goals),len(set(goals)),len(starts),len(set(starts)))
+        assert(len(starts)==int(m*m2*m2/3))
+        if len(goals)!=len(set(goals)):
+            print(len(goals),len(set(goals)))
+        assert(len(goals)==len(set(goals)))
+        assert(len(starts)==len(set(starts)))
+        
+        print(len(starts),len(set(starts)),len(set(goals)),m)
+        filename='./instances/rings/'+str(m)+'.scen'
+        save_instance_as_txt(filename,starts,goals,(m2,m2,m))
+    
+def generate_blocks():
+    ss=[3,6,9,12,15,18,21,24,27,30,33,36]
+    d=3
+    for m in ss:
+        mk=2*m
+        for k in range(0,20):
+            starts,goals=generate_quasi_random_instance((mk,mk,m))
+            mx=int(mk/d)
+            mz=int(m/d)
+            ids=[]
+            start_ids=[(i,j,l) for i in range(0,mx) for j in range(0,mx) for l in range(0,mz)]
+            goal_ids=[(i,j,l) for i in range(0,mx) for j in range(0,mx) for l in range(0,mz)]
+            np.random.shuffle(goal_ids)
+            #find_agents:
+            agents_groups=dict()
+            for goal in goals:
+                goal_id=(int(goal[0]/d),int(goal[1]/d),int(goal[2]/d))
+                if goal_id not in agents_groups:
+                    agents_groups[goal_id]=[]
+                agents_groups[goal_id].append(goal)
+            new_goals=[]
+            for start in starts:
+                start_id=(int(start[0]/d),int(start[1]/d),int(start[2]/d))
+                goal_id=goal_ids[start_ids.index(start_id)]
+                new_goal=agents_groups[goal_id].pop()
+                ids.append(start_ids.index(start_id))
+                new_goals.append(new_goal)
+            print(len(starts),len(set(starts)),len(set(new_goals)),m)
+            filename='./instances/blocks/'+str(m)+'_'+str(k)+'.scen'
+          #  agents=[]
+      
+        #    for i in range(len(starts)):
+         #       agent=Agent(i,starts[i],new_goals[i],virtual=False,current=starts[i],group_id=ids[i])
+         #       agents.append(agent)
+            save_instance_as_txt(filename,starts,new_goals,(mk,mk,m))
+
+def generate_block_demo():
+    m=9
+    mk=9
+    d=3
+    starts,goals=generate_quasi_random_instance((mk,mk,m))
+    mx=int(mk/d)
+    mz=int(m/d)
+    ids=[]
+    start_ids=[(i,j,l) for i in range(0,mx) for j in range(0,mx) for l in range(0,mz)]
+    goal_ids=[(i,j,l) for i in range(0,mx) for j in range(0,mx) for l in range(0,mz)]
+    np.random.shuffle(goal_ids)
+    #find_agents:
+    agents_groups=dict()
+    for goal in goals:
+        goal_id=(int(goal[0]/d),int(goal[1]/d),int(goal[2]/d))
+        if goal_id not in agents_groups:
+            agents_groups[goal_id]=[]
+        agents_groups[goal_id].append(goal)
+    new_goals=[]
+    for goal_id,agents in agents_groups.items():
+        print(goal_id,len(agents))
+  
+    for start in starts:
+        start_id=(int(start[0]/d),int(start[1]/d),int(start[2]/d))
+        #print(start_id)
+        goal_id=goal_ids[start_ids.index(start_id)]
+        new_goal=agents_groups[goal_id].pop()
+       
+        ids.append(start_ids.index(start_id))
+        new_goals.append(new_goal)
+    print(len(starts),len(set(starts)),len(set(new_goals)),m)
+    filename='./demo_block.scen'
+    save_instance_as_txt(filename,starts,new_goals,(mk,mk,m))
+      
+def generate_obstacles():
+    ss=[3,6,9,12,15,18,21,24,27,30,33,36]
+    for m in ss:
+        m2=4*m
+        m1=2*m
+        for k in range(20):
+            file_name="./instances/quasi_obs_rec/"+str(m)+'_rec_'+str(k)+'.scen'
+            print(file_name)
+            starts,goals=generate_quasi_random_obstacles((m1,m2,m))
+            save_instance_as_txt(file_name,starts,goals,(m1,m2,m))
+            
+
+def generate_true_random_rec():
+    ss=[3,6,9,12,15,18,21,24,27,30,33,36]
+    for m in ss:
+        m2=4*m
+        m1=2*m
+        for k in range(20):
+            file_name="./instances/true_random/"+str(m)+'_rec_'+str(k)+'.scen'
+            starts,goals=generate_random_instance((m1,m2,m))
+            save_instance_as_txt(file_name,starts,goals,(m1,m2,m))    
     
     
 if __name__=="__main__":
@@ -134,4 +316,11 @@ if __name__=="__main__":
     #generate_debug_rth2d()
     #quasi_random_data()
     #generate_3d_debug()
-    generate_flat_quasi_random()
+    #generate_flat_quasi_random()
+    #generate_quasi_random_rec()
+    #generate_density_rec()
+    # generate_quasi_random_rec()
+    #generate_obstacles()
+    #generate_blocks()
+    # generate_true_random_rec()
+    generate_block_demo()

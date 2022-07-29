@@ -213,7 +213,7 @@ def read_instance(file_name: str) -> Tuple[List[Tuple[int, int]]]:
         lines = file_content.readlines()
         starts = list()
         goals = list()
-        for line in lines[2:]:
+        for line in lines[9:]:
             x1, y1, x2, y2 = line.split()
             starts.append((int(x1), int(y1)))
             goals.append((int(x2), int(y2)))

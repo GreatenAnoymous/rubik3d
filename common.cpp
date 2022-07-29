@@ -10,7 +10,7 @@
  */
 
 #include"common.hpp"
-
+#include<random>
 
 
 /**
@@ -72,12 +72,33 @@ Location3d* Grids3d::getVertex(int x,int y, int z){
  */
 std::vector<Location3d*> Grids3d::getNeighbors(Location3d * node){
     std::vector<Location3d *> neighbors;
-    if(node->x-1 >=0 ) neighbors.push_back(getVertex(node->x-1,node->y,node->z));
-    if(node->y-1>=0) neighbors.push_back(getVertex(node->x,node->y-1,node->z));
-    if(node->z-1>=0) neighbors.push_back(getVertex(node->x,node->y,node->z-1));
-    if(node->x+1<xmax) neighbors.push_back(getVertex(node->x+1,node->y,node->z));
-    if(node->y+1<ymax) neighbors.push_back(getVertex(node->x,node->y+1,node->z));
-    if(node->z+1<zmax) neighbors.push_back(getVertex(node->x,node->y,node->z+1));
+    // std::cout<<node->print()<<std::endl;
+    // printf("size=(%d,%d,%d)\n",xmax,ymax,zmax);
+    // std::cout<<"==================="<<std::endl;
+    if(node->x-1 >=0 ){
+        auto nc=getVertex(node->x-1,node->y,node->z);
+        if(obstacles.find(nc)==obstacles.end()) neighbors.push_back(nc);
+    } 
+    if(node->y-1>=0) {
+        auto nc=getVertex(node->x,node->y-1,node->z);
+        if(obstacles.find(nc)==obstacles.end()) neighbors.push_back(nc);
+    }
+    if(node->z-1>=0) {
+        auto nc=getVertex(node->x,node->y,node->z-1);
+        if(obstacles.find(nc)==obstacles.end()) neighbors.push_back(nc);
+    }
+    if(node->x+1<xmax){
+        auto nc=getVertex(node->x+1,node->y,node->z);
+        if(obstacles.find(nc)==obstacles.end()) neighbors.push_back(nc);
+    }
+    if(node->y+1<ymax) {
+        auto nc=getVertex(node->x,node->y+1,node->z);
+        if(obstacles.find(nc)==obstacles.end()) neighbors.push_back(nc);
+    }
+    if(node->z+1<zmax){
+        auto nc=getVertex(node->x,node->y,node->z+1);
+        if(obstacles.find(nc)==obstacles.end()) neighbors.push_back(nc);
+    }
     return neighbors;
 }
 
@@ -143,7 +164,7 @@ void read_instances(std::string file_name,Robots &robots,Grids3d *&graph){
             Robot *ri=new Robot(id,graph->getVertex(x_s,y_s,z_s),graph->getVertex(x_g,y_g,z_g));
             id++;
       
-            robots.push_back(ri);
+            robots.push_back(ri); 
             
             // starts.push_back(Location(x_s,y_s));
             // goals.push_back(Location(x_g,y_g));
@@ -320,4 +341,116 @@ void print_one_path(Path3d &path){
         printf("(%d,%d,%d) ",v->x,v->y,v->z);
     }
     std::cout<<std::endl;
+}
+
+/**
+ * @brief 
+ * 
+ * @param file_name 
+ * @param starts 
+ * @param goals 
+ * @param graph 
+ */
+
+void read_starts_goals(std::string file_name,Configs &starts,Configs &goals,Grids3d* &graph){
+    starts.clear();
+    goals.clear();
+    int xmax=-1,ymax=-1,zmax=-1;
+    std::string line;
+    std::smatch results;
+    std::ifstream scen_file(file_name);
+    std::regex r_xmax=std::regex(R"(xmax=(\d+))");
+    std::regex r_ymax=std::regex(R"(ymax=(\d+))");
+    std::regex r_zmax=std::regex(R"(zmax=(\d+))");
+    std::regex r_sg=std::regex(R"((\d+),(\d+),(\d+),(\d+),(\d+),(\d+))");
+
+
+    if(!scen_file){
+        std::cout<<"File not found!"<<std::endl;
+        exit(0);
+    }
+    int id=0;
+    while(getline(scen_file,line)){
+        //CRLF
+        if(*(line.end()-1)==0x0d) line.pop_back();
+        if(std::regex_match(line,results,r_xmax)){
+            xmax=std::stoi(results[1].str());
+            continue;
+        }
+
+        if(std::regex_match(line,results,r_ymax)){
+            ymax=std::stoi(results[1].str());
+            continue;
+        }
+
+        if(std::regex_match(line,results,r_zmax)){
+            zmax=std::stoi(results[1].str());
+            graph=new Grids3d(xmax,ymax,zmax);
+            continue;
+        }
+   
+        
+        if(std::regex_match(line,results,r_sg)){
+            
+            int x_s=std::stoi(results[1].str());
+            int y_s=std::stoi(results[2].str());
+            int z_s=std::stoi(results[3].str());
+            int x_g=std::stoi(results[4].str());
+            int y_g=std::stoi(results[5].str());
+            int z_g=std::stoi(results[6].str());
+            auto vs=graph->getVertex(x_s,y_s,z_s);
+            auto vg=graph->getVertex(x_g,y_g,z_g);
+            id++;
+            starts.push_back(vs);
+            goals.push_back(vg);
+            continue;
+        }
+        
+    } 
+}
+
+/**
+ * @brief 
+ * 
+ * @param robots 
+ */
+void add_virtual_robots(Robots &robots,Grids3d *graph){
+    Configs possible_starts,possible_goals;
+    std::set<Location3d*> starts,goals;
+    for(auto &robot:robots){
+        starts.insert(robot->start);
+        goals.insert(robot->goal);
+    }
+    for(auto &node:graph->getNodes()){
+        if(starts.find(node)==starts.end()) possible_starts.emplace_back(node);
+        if(goals.find(node)==goals.end()) possible_goals.emplace_back(node);
+    }
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::shuffle(possible_starts.begin(),possible_starts.end(),g);
+    std::shuffle(possible_goals.begin(),possible_goals.end(),g);
+    int num_agents=starts.size();
+    int desired_num=graph->xmax*graph->ymax*graph->zmax/3;
+    int id=num_agents;
+    while(robots.size()<desired_num){
+        auto si=possible_starts.back();
+        auto gi=possible_goals.back();
+        Robot* r=new Robot(id,si,gi);
+        r->isVirtual=true;
+        robots.emplace_back(r);
+        possible_starts.pop_back();
+        possible_goals.pop_back();
+        id++;
+    }
+}
+
+/**
+ * @brief 
+ * 
+ * @param robots 
+ */
+void remove_virtual_robots(Robots &robots){
+    while(robots.back()->isVirtual==true){
+        robots.pop_back();
+    }
 }

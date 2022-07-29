@@ -1,5 +1,0 @@
-soc=672300
-lb_soc=129489
-makespan=166
-lb_makespan=87
-comp_time=379

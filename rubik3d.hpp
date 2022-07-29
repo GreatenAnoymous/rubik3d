@@ -19,14 +19,16 @@
  */
 
 class RTH_3d{
+
+public:
 using point3d=std::tuple<int,int,int>;
 using point2d=std::pair<int,int>;
 using robotPlaceMap=std::unordered_map<point3d,Robots,boost::hash<point3d>>;
-public:
     RTH_3d(){}
     RTH_3d(Robots &, Grids3d *graph);
     void solve();
     void save_result(std::string out_name,double runtime=0,bool save_paths=false){
+        remove_virtual_robots(robots);
         save_solutions(out_name,robots,runtime,save_paths);
     } 
 
@@ -57,18 +59,17 @@ protected:
         if(graph->xmax>=graph->ymax){
             x=id%(graph->xmax);
             y=id/(graph->xmax);
+            // printf("debug get xy=%d,%d   xmax=%d,ymax=%d\n",x,y,graph->xmax,graph->ymax);
         }else{
             y=id%(graph->ymax);
-            y=id/(graph->ymax);
+            x=id/(graph->ymax);
+            //  printf("debug get xy=%d,%d   xmax=%d,ymax=%d\n",x,y,graph->xmax,graph->ymax);
         }
     
     }
     void append_umapf_path();
     void random_to_balanced();
     void random_to_balanced_fast();
-    
-    
-    
 };
 
 

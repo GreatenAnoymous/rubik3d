@@ -58,8 +58,16 @@ public:
     int getNodesSize(){
         return nodes.size();
     }
+    std::vector<Location3d*> getNodes(){
+       return nodes; 
+    }
+
+    void add_obstacles(Location3d *obs){
+        this->obstacles.insert(obs);
+    }
 protected:
     std::vector<Location3d *> nodes;
+    std::set<Location3d *> obstacles;
 };
 
 
@@ -81,13 +89,14 @@ public:
     Location3d *start;            //true start
     Location3d *current;        //current state
     Location3d *goal;           //true goal
-    Location3d *intermediate;   //next config it needs to go
+    Location3d *intermediate=nullptr;   //next config it needs to go
     Location3d *inter_goal; //2d fat column shuffle intermediate goal
-    Location3d *inter2;  //intermediate in the swapper
+    Location3d *inter2=nullptr;  //intermediate in the swapper
     Location3d *umapf_goal;    //umapf goal
     Path3d umapf_goal_path;     //umpaf_goal path
     Path3d path;                //true path
     Path3d inter_path;          //umpaf inter_goal
+    bool isVirtual=false;
     
     
 };
@@ -103,3 +112,7 @@ void evaluate_result(Robots &robots,int &makespan,int &makespanLB,int &soc,int &
 void fill_paths(Robots &robots,int makespan=-1);
 void shrink_paths(Robots&robots);
 void print_one_path(Path3d &path);
+void read_starts_goals(std::string filename,Configs &starts,Configs &goals,Grids3d*&graph);
+void add_virtual_robots(Robots &robots,Grids3d*graph);
+void remove_virtual_robots(Robots &robots);
+void construct_building_grids(Robot &robots,Grids3d*&graph);
